@@ -1,0 +1,11 @@
+# UE 资产是二进制文件，禁止 Git 做换行符转换和自动合并
+*.uasset binary
+*.umap binary
+*.upk binary
+*.udk binary
+*.ubulk binary
+*.uexp binary
+
+# 文本类配置文件统一用 CRLF（UE 编辑器写出的格式）
+*.ini text eol=crlf
+*.uproject text eol=crlf

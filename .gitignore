@@ -1,0 +1,30 @@
+# Unreal Engine 自动生成的目录（不要提交，换机器后引擎会重新生成）
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+Platforms/*/Binaries/
+Platforms/*/Build/
+
+# 编辑器 / IDE
+.vs/
+.vscode/
+.idea/
+*.sln
+*.suo
+*.opendb
+*.VC.db
+*.sdf
+*.opensdf
+
+# 本地临时文件
+*.tmp
+*.log
+Content/Developers/
+Content/Collections/
+
+# 系统文件
+Thumbs.db
+desktop.ini
+.DS_Store
