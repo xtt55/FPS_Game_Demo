@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第02课 · 修改DDC缓存路径 · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link" href="index.html">首页</a>
+<a class="nav-link" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link active" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">第02课 · 修改DDC缓存路径</h1>
+    <a class="video-link" href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=3" target="_blank" rel="noopener">▶ 对应视频（P3）</a>
+    <h2>本课要解决什么</h2>
+<ol>
+<li>搞懂**派生数据缓存（DDC）**是干什么的。</li>
+<li>把<strong>全局本地 DDC</strong> 改到有空间的 SSD 路径。</li>
+<li>知道<strong>全局共享 DDC</strong> 什么时候才用得上。</li>
+</ol>
+<hr>
+<h2>为什么要有 DDC</h2>
+<p>比喻：显卡/画面像食客，只能吃「做熟的菜」；导入贴图、写材质后，引擎要先<strong>编译</strong>（最常见就是「正在编译着色器」）。</p>
+<p>若每次开工程都重做一遍，会等到天荒地老。DDC 把编译好的着色器、压缩贴图等缓存下来，下次直接读。</p>
+<h2>为什么建议改路径</h2>
+<p>工程一多、商城资产一多，DDC 会胀到几十 GB、上百 GB 都正常。默认常在系统盘，<strong>C 盘爆红的常见元凶之一就是它</strong>。</p>
+<p>强烈建议改到容量够、且是 <strong>SSD</strong> 的盘；放机械盘会明显拖慢引擎。</p>
+<h2>在编辑器里改</h2>
+<p>路径：<strong>编辑 → 编辑器偏好设置 → 通用 → 全局 → 派生数据缓存</strong></p>
+<ul>
+<li><strong>全局本地 DDC 路径</strong>：个人本机必改；指到你的 SSD 大目录。</li>
+<li><strong>全局共享 DDC 路径</strong>：多人同项目时，可指向局域网盘；别人已编译的缓存大家共用，减少重复编译。单人学习通常改本地即可。</li>
+</ul>
+<p><a class="img-link" href="assets/img/l02-ddc-path.png" target="_blank" rel="noopener"><img src="assets/img/l02-ddc-path.png" alt="修改本地DDC路径" loading="lazy"></a></p>
+<p>改完后新编译会写到新路径；旧缓存不会自动搬家，可按需清理旧目录腾空间。</p>
+<hr>
+<h2>易错点速查</h2>
+<ol>
+<li>DDC 必须在 <strong>SSD</strong> 上。</li>
+<li>这是<strong>编辑器本机偏好</strong>，一般<strong>不进项目 Git</strong>。</li>
+<li>别和「项目里的 <code>DerivedDataCache/</code> 文件夹」混为一谈——全局路径才是课里要改的。</li>
+</ol>
+<h2>下节预告</h2>
+<p>第 03 课：自定义 GameMode / Player，配 Enhanced Input（IA / IMC）。</p>
+
+    
+    <div class="pager">
+      <a href="lesson-01.html">← 01 创建项目及导入素材</a>
+      <a href="lesson-03.html">03 配置游戏模式及输入 →</a>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>

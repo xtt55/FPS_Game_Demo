@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第06课 · 制作角色能力系统 · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link" href="index.html">首页</a>
+<a class="nav-link" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link active" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">第06课 · 制作角色能力系统</h1>
+    <a class="video-link" href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=7" target="_blank" rel="noopener">▶ 对应视频（P7）</a>
+    <h2>本课要解决什么</h2>
+<ol>
+<li>把移动输入<strong>缓存到变量</strong>（Move X / Move Y），松开键时清零。</li>
+<li>用 <code>Want to Run</code> / <code>Want to Aim</code> 记录跑步键、瞄准键的<strong>输入意图</strong>。</li>
+<li>用<strong>枚举</strong> <code>EPlayerState</code> + 函数 <code>UpdatePlayerState</code> 统一算出 Idle / Walk / Run / Aim。</li>
+<li>按状态改 <code>Max Walk Speed</code>（本课不做动画，动画第 07 课接）。</li>
+</ol>
+<hr>
+<h2>一、变量：缓存输入</h2>
+<h3>1. Move X / Move Y</h3>
+<p>在 <code>IA_Move</code> 里把 Action Value 拆成 X/Y 后<strong>提升为变量</strong> <code>Move X</code>、<code>Move Y</code>：</p>
+<ul>
+<li><strong>Triggered</strong>：SET 两变量（供移动逻辑和动画系统读取）</li>
+<li><strong>Completed</strong>：再 SET 两变量为 <strong>0</strong></li>
+</ul>
+<p><strong>为什么必须 Completed 清零？</strong> Triggered 只在键按住时跑。松开后 Triggered 不再执行，变量会<strong>卡在松开前的值</strong>（例如一直在「前进」）。Completed 在松开时执行，手动写成 0，状态机才能看到「没在按」。</p>
+<p>轴约定：<strong>Move X = W/S（前后）</strong>，<strong>Move Y = A/D（左右）</strong>。</p>
+<h3>2. Want to Run / Want to Aim</h3>
+<ul>
+<li><code>IA_Run</code>（左 Ctrl）：Triggered → <code>Want to Run = true</code>；Completed → <code>false</code>。</li>
+<li><code>IA_Aim</code>（右键）：同理写 <code>Want to Aim</code>。</li>
+</ul>
+<p>注意命名：这是「<strong>想不想</strong>跑 / 瞄」（输入意图），<strong>还不等于</strong>最终状态（还要过优先级判断）。</p>
+<hr>
+<h2>二、枚举 EPlayerState</h2>
+<p>从文件夹创建蓝图-枚举，四个值：</p>
+<table>
+<thead>
+<tr>
+<th align="left">值</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>Idle</code></td>
+<td align="left">站着不动</td>
+</tr>
+<tr>
+<td align="left"><code>Walk</code></td>
+<td align="left">走</td>
+</tr>
+<tr>
+<td align="left"><code>Run</code></td>
+<td align="left">跑</td>
+</tr>
+<tr>
+<td align="left"><code>Aim</code></td>
+<td align="left">瞄准</td>
+</tr>
+</tbody></table>
+<p>角色蓝图添加变量 <code>E Player State</code>，类型选该枚举（<strong>不要留成布尔</strong>）。</p>
+<p><a class="img-link" href="assets/img/l06-eplayerstate-enum.png" target="_blank" rel="noopener"><img src="assets/img/l06-eplayerstate-enum.png" alt="EPlayerState 枚举" loading="lazy"></a></p>
+<hr>
+<h2>三、函数 UpdatePlayerState（状态中枢）</h2>
+<p><a class="img-link" href="assets/img/l06-updateplayerstate-graph.png" target="_blank" rel="noopener"><img src="assets/img/l06-updateplayerstate-graph.png" alt="UpdatePlayerState 完整图" loading="lazy"></a></p>
+<h3>节点逐个解释</h3>
+<table>
+<thead>
+<tr>
+<th align="left">节点</th>
+<th align="left">解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>UpdatePlayerState 入口</strong>（紫色）</td>
+<td align="left">图最左边的起点，代表「这个函数开始执行」。没有输入，只有一条白色执行线往外走</td>
+</tr>
+<tr>
+<td align="left"><strong>第一个 Branch</strong>（流程控制）</td>
+<td align="left">菱形判断：一个红色布尔输入（条件），两个白色执行输出 True / False。本图条件接 <strong>Want to Aim</strong>，True 走 Aim，False 往下走</td>
+</tr>
+<tr>
+<td align="left"><strong>Set E Player State</strong>（变量赋值）</td>
+<td align="left">把一个枚举值（Aim/Run/Walk/Idle）写进 E Player State 变量。一条白线进、一条出（赋值完继续），数据输入脚接具体的枚举常量</td>
+</tr>
+<tr>
+<td align="left"><strong>Want to Aim / Want to Run</strong>（Getter）</td>
+<td align="left">蓝色小节点，输出红色布尔细线，把当前 bool 变量的值喂给 Branch 当条件</td>
+</tr>
+<tr>
+<td align="left"><strong>第二个 Branch</strong>（判断 Move X &gt; 0）</td>
+<td align="left">条件不是直接接变量，而是接比较节点的输出</td>
+</tr>
+<tr>
+<td align="left"><strong><code>&gt;</code> 比较节点</strong>（纯函数，无白线）</td>
+<td align="left">绿色节点，吃两个绿色 float（左边 Move X，右边常量 0.0），吐出红色布尔线给 Branch。没有白色执行线 = <strong>纯函数</strong>，不消耗执行流，只在需要值时计算</td>
+</tr>
+<tr>
+<td align="left"><strong>第三个 Branch</strong>（再判断 Want to Run）</td>
+<td align="left">在 Move X &gt; 0 的 True 分支里，判断要不要跑</td>
+</tr>
+<tr>
+<td align="left"><strong>Character Movement → Velocity → Vector Length</strong></td>
+<td align="left">Character Movement：深蓝对象脚（角色移动组件），从左侧蓝图树拉出；Velocity：从它身上取出的蓝色向量脚（当前速度向量）；Vector Length：纯函数，把蓝色向量变成绿色 float（速度大小/模长）</td>
+</tr>
+<tr>
+<td align="left"><strong>第四个 Branch</strong>（判断 Velocity.Length &gt; 0）</td>
+<td align="left">在 Move X == 0 的 False 分支里，用「实际速度是否还在动」兜底判断是否 Walk</td>
+</tr>
+</tbody></table>
+<h3>工作流（优先级从高到低）</h3>
+<pre><code>1. Want to Aim == true                    → Aim（瞄准压过一切）
+2. Move X &gt; 0（按住 W）且 Want to Run      → Run
+3. Move X &gt; 0（按住 W）且没按跑            → Walk
+4. Move X == 0 但 Velocity.Length &gt; 0      → Walk（A/D/S 或减速残留）
+5. 全部不满足                              → Idle
+</code></pre>
+<blockquote>
+<p>设计说明：<strong>只用 Move X 判断跑步</strong>——多数 FPS 只允许「向前跑」，没有左右跑动画时更稳妥，A/D/S 不进 Run。瞄准中按跑步键仍应是 Aim（第 1 条优先）。</p>
+</blockquote>
+<hr>
+<h2>四、函数 UpdateMoveSpeed（按状态改速度）</h2>
+<p><code>E Player State</code> → <strong>Select</strong> 节点 → <code>Set Max Walk Speed</code>（Target：Character Movement）。</p>
+<p>参考值（可微调）：</p>
+<table>
+<thead>
+<tr>
+<th align="left">状态</th>
+<th align="left">Max Walk Speed</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Idle</td>
+<td align="left">400（防怪 bug，不必 0）</td>
+</tr>
+<tr>
+<td align="left">Walk</td>
+<td align="left">400</td>
+</tr>
+<tr>
+<td align="left">Run</td>
+<td align="left">600</td>
+</tr>
+<tr>
+<td align="left">Aim</td>
+<td align="left">265</td>
+</tr>
+</tbody></table>
+<p>在 <strong>Event Tick</strong> 里（接在已有 Arm 旋转逻辑之后）：先调 <code>UpdatePlayerState</code>，再调 <code>UpdateMoveSpeed</code>。</p>
+<hr>
+<h2>五、调试技巧（Print String）</h2>
+<p><strong>案例一：查看角色状态</strong>——打印 <code>E Player State</code> 枚举的值。<code>Print String</code> 的 <strong>Duration</strong> 引脚控制打印信息在屏幕上的显示时长，为 0 时一直显示。</p>
+<p><a class="img-link" href="assets/img/l06-debug-print-state.png" target="_blank" rel="noopener"><img src="assets/img/l06-debug-print-state.png" alt="打印角色状态" loading="lazy"></a></p>
+<p><strong>案例二：查看角色速度</strong>——从蓝图树拉出角色移动组件，连 <code>Max Walk Speed</code>，再连 <code>Print String</code>，即可查看角色的最大行走速度。</p>
+<p><a class="img-link" href="assets/img/l06-debug-print-speed.png" target="_blank" rel="noopener"><img src="assets/img/l06-debug-print-speed.png" alt="打印速度" loading="lazy"></a></p>
+<hr>
+<h2>易错点速查</h2>
+<ol>
+<li>忘了 Walk 的 <strong>Completed → 置 0</strong> → 松键仍像在走/能误触发 Run。</li>
+<li><code>E Player State</code> 类型要选<strong>枚举</strong>，别建成布尔。</li>
+<li>只按跑步键不能跑：必须 <strong>W + 跑步键</strong>（Move X &gt; 0 且 Want to Run）。</li>
+<li>瞄准中按跑步键仍应是 Aim，不是 Run。</li>
+<li>Velocity 的中文「速度」实为<strong>速度向量</strong>；用**向量长度（Vector Length）**判断是否还在动。</li>
+</ol>
+<h2>下节预告</h2>
+<p>第 07–09 课：做动画系统，让 Idle / Walk / Run / Aim 有实际动作表现。</p>
+
+    
+    <div class="pager">
+      <a href="lesson-05.html">← 05 完善角色细节</a>
+      <a href="lesson-07-09.html">07-09 制作动画系统 →</a>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>

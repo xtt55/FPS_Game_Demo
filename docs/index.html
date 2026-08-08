@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UE5 FPS 学习笔记 · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link active" href="index.html">首页</a>
+<a class="nav-link" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">UE5 FPS 学习笔记</h1>
+    
+    <p>跟随 B 站教程《<a href="https://www.bilibili.com/video/BV1aw9jBeEHr">FPS游戏开发教程 | UE5制作第一人称射击游戏 | 虚幻引擎5.7 零基础入门</a>》（星露Studio）的跟做笔记，基于工程 <strong>FPS_Game_Demo</strong>（UE 5.8）。</p>
+<h2>这份笔记的特点</h2>
+<ul>
+<li><strong>按课程章节线性组织</strong>：每一课一页，照着顺序就能从头回忆整个工程是怎么一步步搭起来的。</li>
+<li><strong>以我自己的工程为准</strong>：蓝图命名、节点连接、截图全部来自我自己的工程（如 <code>BP_FPS_Player</code>、<code>ABP_FPSPlayer</code>、<code>ABP_VIRTUL</code>）。</li>
+<li><strong>节点级讲解</strong>：每张蓝图都解释节点和引脚的作用、数据流向，而不只是&quot;点这里&quot;。</li>
+</ul>
+<h2>章节</h2>
+<div class="lesson-grid">
+<a class="lesson-card" href="lesson-01.html"><div class="n">第01课</div><div class="t">创建项目及导入素材</div></a>
+<a class="lesson-card" href="lesson-02.html"><div class="n">第02课</div><div class="t">修改DDC缓存路径</div></a>
+<a class="lesson-card" href="lesson-03.html"><div class="n">第03课</div><div class="t">配置游戏模式及输入</div></a>
+<a class="lesson-card" href="lesson-04.html"><div class="n">第04课</div><div class="t">实现角色基本能力</div></a>
+<a class="lesson-card" href="lesson-05.html"><div class="n">第05课</div><div class="t">完善角色细节</div></a>
+<a class="lesson-card" href="lesson-06.html"><div class="n">第06课</div><div class="t">制作角色能力系统</div></a>
+<a class="lesson-card" href="lesson-07-09.html"><div class="n">第07–09课</div><div class="t">制作动画系统（上/中/下）</div></a>
+<a class="lesson-card" href="lesson-10.html"><div class="n">第10课</div><div class="t">模块化设计及DeBug</div></a>
+<a class="lesson-card" href="lesson-11.html"><div class="n">第11课</div><div class="t">完善瞄准系统（上）</div></a>
+</div>
+
+<h2>核心资产速查</h2>
+<table>
+<thead>
+<tr>
+<th align="left">资产</th>
+<th align="left">类型</th>
+<th align="left">作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>BP_FPS_Player</code></td>
+<td align="left">蓝图类（角色）</td>
+<td align="left">FPS 玩家角色，移动/视角/状态逻辑都在这里</td>
+</tr>
+<tr>
+<td align="left"><code>BP_FPS_GameMode</code></td>
+<td align="left">蓝图类（游戏模式）</td>
+<td align="left">指定默认 Pawn 为 BP_FPS_Player</td>
+</tr>
+<tr>
+<td align="left"><code>IMC_FPS_Input</code> + <code>IA_*</code></td>
+<td align="left">增强输入</td>
+<td align="left">移动 / 视角 / 跑步 / 瞄准的输入映射</td>
+</tr>
+<tr>
+<td align="left"><code>EPlayerState</code></td>
+<td align="left">枚举</td>
+<td align="left">Idle / Walk / Run / Aim 四种角色状态</td>
+</tr>
+<tr>
+<td align="left"><code>ABP_FPSPlayer</code></td>
+<td align="left">动画蓝图（人物）</td>
+<td align="left"><strong>权威数据源</strong>，驱动手臂动画</td>
+</tr>
+<tr>
+<td align="left"><code>ABP_VIRTUL</code></td>
+<td align="left">动画蓝图（枪械）</td>
+<td align="left">复用 ABP_FPSPlayer 的变量，驱动枪械动画</td>
+</tr>
+<tr>
+<td align="left"><code>BS_FPSPlayer</code> / <code>BS_VIRTUL</code></td>
+<td align="left">混合空间</td>
+<td align="left">八方向移动动画混合（人物 / 枪械）</td>
+</tr>
+<tr>
+<td align="left"><code>BP_WeaponBase</code></td>
+<td align="left">蓝图类（Actor）</td>
+<td align="left">枪械基类，保存枪械共有属性</td>
+</tr>
+<tr>
+<td align="left"><code>BP_VIRTUS</code></td>
+<td align="left">蓝图类（继承 WeaponBase）</td>
+<td align="left">具体枪械（Virtus，类似 AK47）</td>
+</tr>
+</tbody></table>
+
+    
+    <div class="pager">
+      <span></span>
+      <a href="lesson-01.html">01 创建项目及导入素材 →</a>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>

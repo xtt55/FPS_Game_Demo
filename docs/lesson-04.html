@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第04课 · 实现角色基本能力 · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link" href="index.html">首页</a>
+<a class="nav-link" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link active" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">第04课 · 实现角色基本能力</h1>
+    <a class="video-link" href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=5" target="_blank" rel="noopener">▶ 对应视频（P5）</a>
+    <h2>本课要解决什么</h2>
+<ol>
+<li>在 Player 的 <code>BeginPlay</code> <strong>激活 Enhanced Input</strong>。</li>
+<li>实现 <code>IA_Move</code> 水平移动、<code>IA_Look</code> 视角旋转。</li>
+<li>讲清 <strong>Yaw / Pitch / Roll</strong>，以及移动时<strong>为什么只连 Control Rotation 的 Z（Yaw）</strong>。</li>
+</ol>
+<hr>
+<h2>〇、先看懂蓝图：连线和颜色</h2>
+<p>开始读蓝图前，先记住两类连线：</p>
+<ul>
+<li><strong>执行线（Execution）</strong>：白色粗线，控制「先干啥后干啥」的顺序流。</li>
+<li><strong>数据线（Data）</strong>：彩色细线，把一个值传给另一个节点。</li>
+</ul>
+<p>细线颜色对照：</p>
+<table>
+<thead>
+<tr>
+<th align="left">颜色</th>
+<th align="left">数据类型</th>
+<th align="left">本课出现的例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">🔴 红</td>
+<td align="left">布尔 Boolean</td>
+<td align="left">各 Branch 的判断条件</td>
+</tr>
+<tr>
+<td align="left">🟢 绿</td>
+<td align="left">浮点 Float</td>
+<td align="left">Move X、常量 0.0</td>
+</tr>
+<tr>
+<td align="left">🔵 蓝</td>
+<td align="left">向量 Vector</td>
+<td align="left">Get Forward Vector 的输出</td>
+</tr>
+<tr>
+<td align="left">🟡 黄</td>
+<td align="left">旋转器 Rotator</td>
+<td align="left">Get Control Rotation 的输出</td>
+</tr>
+<tr>
+<td align="left">🟠 橙</td>
+<td align="left">变换 Transform</td>
+<td align="left">（本课没用到）</td>
+</tr>
+<tr>
+<td align="left">🟣 紫</td>
+<td align="left">函数入口/事件</td>
+<td align="left">函数定义的入口节点</td>
+</tr>
+<tr>
+<td align="left">🔵 深蓝</td>
+<td align="left">对象引用 Object</td>
+<td align="left">Controller、Character Movement 组件引用</td>
+</tr>
+<tr>
+<td align="left">⚪ 自定义色</td>
+<td align="left">枚举 Enum</td>
+<td align="left">E Player State 的取值</td>
+</tr>
+</tbody></table>
+<p>一句话记忆：<strong>红色是判断题、绿色是数字、蓝色是向量、深蓝是对象</strong>。</p>
+<hr>
+<h2>一、BeginPlay：激活输入映射上下文</h2>
+<p><a class="img-link" href="assets/img/l04-beginplay-input-chain.png" target="_blank" rel="noopener"><img src="assets/img/l04-beginplay-input-chain.png" alt="BeginPlay 激活输入链" loading="lazy"></a></p>
+<h3>节点逐个解释</h3>
+<table>
+<thead>
+<tr>
+<th align="left">节点</th>
+<th align="left">作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Event BeginPlay</strong>（红色事件节点）</td>
+<td align="left">事件开始入口，游戏一运行就触发一次</td>
+</tr>
+<tr>
+<td align="left"><strong>Get Controller</strong></td>
+<td align="left">获取玩家控制器。Target 为 self，多人游戏会根据 index 获取对应的玩家控制器；表示「谁运行控制谁」</td>
+</tr>
+<tr>
+<td align="left"><strong>Cast To PlayerController</strong></td>
+<td align="left">类型转换。只有真正的玩家（而不是 AI）才会去绑定后续的输入系统</td>
+</tr>
+<tr>
+<td align="left"><strong>Enhanced Input Local Player Subsystem</strong></td>
+<td align="left">增强输入本地玩家子系统，增强输入系统的入口</td>
+</tr>
+<tr>
+<td align="left"><strong>Add Mapping Context</strong></td>
+<td align="left">通过这个引脚关联自定义的输入系统；Mapping Context 设为 <code>IMC_FPS_Input</code></td>
+</tr>
+<tr>
+<td align="left"><strong>Spawn Weapon</strong></td>
+<td align="left">调用枪械生成函数（第 10 课模块化后才有，详见<a href="lesson-10.html">第10课</a>；如果用静态组件直接挂枪则不需要这一节点）</td>
+</tr>
+</tbody></table>
+<h3>补充：单机简写与多人写法</h3>
+<p>单机且只有一个玩家的游戏可以用「Get Player Controller，index 恒定为 0」的短写法，表示第一个玩家：</p>
+<p><a class="img-link" href="assets/img/l04-get-player-controller-index0.png" target="_blank" rel="noopener"><img src="assets/img/l04-get-player-controller-index0.png" alt="Get Player Controller index 0" loading="lazy"></a></p>
+<p>但这是硬编码：本地分屏 / 多人时玩家 2 也会去抢 Index 0 的控制器。<code>Get Controller</code>（Target=self）的写法是问「<strong>当前这个角色</strong>的控制器是谁」，各玩家独立，更稳。</p>
+<hr>
+<h2>二、IA_Move：水平移动</h2>
+<p><a class="img-link" href="assets/img/l04-eventgraph-ia-move.png" target="_blank" rel="noopener"><img src="assets/img/l04-eventgraph-ia-move.png" alt="IA_Move 完整图" loading="lazy"></a></p>
+<h3>节点逐个解释</h3>
+<table>
+<thead>
+<tr>
+<th align="left">节点</th>
+<th align="left">作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>EnhancedInputAction IA_Move</strong>（红色事件）</td>
+<td align="left">控制角色移动，操控角色在场景中平移。<strong>Triggered</strong> 引脚在键按住时持续触发；<strong>Completed</strong> 引脚在键抬起时触发一次</td>
+</tr>
+<tr>
+<td align="left"><strong>Break Vector2D</strong>（纯函数）</td>
+<td align="left">把 Action Value 的 Vector2D 分解为 X 和 Y 分量。也可以不要这个节点，直接右键 Action Value 引脚「分割结构体引脚」，这里只是为了更清晰地展示数据流</td>
+</tr>
+<tr>
+<td align="left"><strong>SET Move X / SET Move Y</strong></td>
+<td align="left">把 X/Y 轴的值存进变量。存成变量后，才能在 Completed 分支把它们设回 0（变量从左侧变量面板拖出，或右键「提升为变量」）</td>
+</tr>
+<tr>
+<td align="left"><strong>Completed → SET(Move X: 0) / SET(Move Y: 0)</strong></td>
+<td align="left">松开按键时把变量清零。<strong>必须做</strong>：Triggered 只在按住时跑，松开后变量会卡在最后的值，角色会一直移动</td>
+</tr>
+<tr>
+<td align="left"><strong>Get Control Rotation</strong></td>
+<td align="left">获取玩家角色的控制旋转（鼠标看向哪）</td>
+</tr>
+<tr>
+<td align="left"><strong>Get Forward Vector / Get Right Vector</strong></td>
+<td align="left">获取前向/右向向量。注意选<strong>数学→向量</strong>分类下的，不要点到「变换」里的同名项</td>
+</tr>
+<tr>
+<td align="left"><strong>Add Movement Input</strong></td>
+<td align="left">把移动输入应用到玩家角色。World Direction 表示方向，Scale Value 表示速度（接 Move X / Move Y）</td>
+</tr>
+</tbody></table>
+<h3>工作流</h3>
+<pre><code>按下 WASD → IA_Move Triggered 持续触发
+  → Action Value (Vector2D) 拆成 X / Y
+  → 存入 Move X / Move Y（供动画系统使用）
+  → Get Control Rotation（只取 Yaw）→ Get Forward/Right Vector
+  → Add Movement Input（前向 × X，右向 × Y）→ 角色平移
+松开 WASD → Completed 触发 → Move X / Move Y 置 0 → 停止输入
+</code></pre>
+<h3>为什么移动只连 Z（Yaw）</h3>
+<table>
+<thead>
+<tr>
+<th align="left">名称</th>
+<th align="left">绕哪根轴</th>
+<th align="left">直觉</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Yaw（偏航）</strong></td>
+<td align="left">Z</td>
+<td align="left">左转右转，指南针东南西北</td>
+</tr>
+<tr>
+<td align="left"><strong>Pitch（俯仰）</strong></td>
+<td align="left">Y</td>
+<td align="left">抬头 / 低头</td>
+</tr>
+<tr>
+<td align="left"><strong>Roll（滚转）</strong></td>
+<td align="left">X</td>
+<td align="left">歪头</td>
+</tr>
+</tbody></table>
+<p>移动时若把 Pitch/Roll 也喂给 Forward 向量：低头按 W，前进方向会指向地面，越走越慢甚至卡住。</p>
+<p><strong>只连 Z</strong>：告诉引擎「只要面朝东南西北，忽略抬头低头」→ Forward 永远贴地 → W 始终沿地面平面前进。</p>
+<hr>
+<h2>三、IA_Look：视角旋转</h2>
+<p><a class="img-link" href="assets/img/l04-eventgraph-ia-look.png" target="_blank" rel="noopener"><img src="assets/img/l04-eventgraph-ia-look.png" alt="IA_Look 完整图" loading="lazy"></a></p>
+<table>
+<thead>
+<tr>
+<th align="left">节点</th>
+<th align="left">作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>EnhancedInputAction IA_Look</strong></td>
+<td align="left">控制角色视角旋转（转头），主要是 X/Y 两轴</td>
+</tr>
+<tr>
+<td align="left"><strong>Break Vector2D</strong></td>
+<td align="left">把鼠标 XY 分解成两个分量</td>
+</tr>
+<tr>
+<td align="left"><strong>Add Controller Yaw Input</strong></td>
+<td align="left">控制左右旋转（接鼠标 X）</td>
+</tr>
+<tr>
+<td align="left"><strong>Add Controller Pitch Input</strong></td>
+<td align="left">控制上下旋转（接鼠标 Y）</td>
+</tr>
+</tbody></table>
+<p>「鼠标上滑却低头」的修正：不要到处乘 -1，在 <strong>IMC 的 IA_Look</strong> 上加修改器 <strong>Negate</strong> 即可（见<a href="lesson-03.html">第03课</a>）。</p>
+<hr>
+<h2>易错点</h2>
+<ol>
+<li>Add Mapping Context 接到 Cast Failed 分支上。</li>
+<li>用 Index 0 短写法却以为适合所有项目。</li>
+<li>Forward/Right 点错分类（变换 vs 数学/向量）。</li>
+<li>Move 时把 Pitch 也连上 → 抬头低头卡移动。</li>
+<li>忘了 Completed → 置 0 → 松键后角色一直走。</li>
+</ol>
+<h2>下节预告</h2>
+<p>第 05 课：搭第一人称组件（手臂 / 摄像机 / 枪），并用 Tick 把视角同步到手臂上。</p>
+
+    
+    <div class="pager">
+      <a href="lesson-03.html">← 03 配置游戏模式及输入</a>
+      <a href="lesson-05.html">05 完善角色细节 →</a>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>

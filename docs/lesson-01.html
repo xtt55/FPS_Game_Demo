@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第01课 · 创建项目及导入素材 · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link" href="index.html">首页</a>
+<a class="nav-link active" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">第01课 · 创建项目及导入素材</h1>
+    <a class="video-link" href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=2" target="_blank" rel="noopener">▶ 对应视频（P2）</a>
+    <blockquote>
+<p>本课没有写蓝图，属于工程准备。我的笔记未覆盖本课，以下内容主要按视频笔记整理。</p>
+</blockquote>
+<h2>本课要解决什么</h2>
+<ol>
+<li>用合适版本建一个<strong>空白蓝图</strong>桌面项目。</li>
+<li>把课程素材包放进项目 <code>Content/</code>。</li>
+<li>建好以后写蓝图用的目录（如 <code>Scripts</code>），和素材包分开。</li>
+</ol>
+<hr>
+<h2>分步讲解</h2>
+<h3>1. 引擎版本与新建项目</h3>
+<p>课里用 <strong>UE 5.7</strong> 录制；建议 5.5+，不要用太老的版本。我的工程是 <strong>5.8</strong>。</p>
+<p>启动器 → <strong>新建项目</strong> → <strong>游戏</strong> → <strong>空白</strong>：</p>
+<ul>
+<li>蓝图（不是 C++）</li>
+<li>目标平台：桌面</li>
+<li>质量预设：最大</li>
+<li><strong>项目名、路径都不要用中文</strong>（打包/使用容易踩坑）</li>
+<li>课例名称：<code>FPS_Game</code></li>
+</ul>
+<h3>2. 导入素材包</h3>
+<p>建好后 Content 是空的。把课前准备好的资源（群文件里的 <strong>XL_FPSPack</strong> 一类）拷进 <code>项目根目录/Content/</code>。</p>
+<p>可在启动器里对工程「在文件夹中显示」，再拖进 <code>Content</code>。关掉资源管理器后，回编辑器内容浏览器应能看到素材（手臂、枪械、动画等）。</p>
+<h3>3. 建自己的代码文件夹</h3>
+<p>在 <code>Content</code> 下新建文件夹（我的工程叫 <strong><code>Scripts</code></strong>，课例叫 <code>Code</code>），自己的逻辑都放这里，别和素材包搅在一起。可给文件夹设个显眼颜色，方便在侧栏找到。</p>
+<p>再在下面建 <code>Players</code> 等子文件夹，角色相关蓝图之后都放这里。其它文件夹用到再加。</p>
+<hr>
+<h2>易错点速查</h2>
+<ol>
+<li>项目名 / 路径含中文 → 后面容易出诡异问题。</li>
+<li>素材要进 <code>Content/</code>，不是工程根目录乱放。</li>
+<li>自己的蓝图进自己的文件夹，不要堆进 <code>XL_FPSPack</code>。</li>
+</ol>
+<h2>下节预告</h2>
+<p>第 02 课：改**派生数据缓存（DDC）**路径，避免 C 盘被撑爆、减少重复编译等待。</p>
+
+    
+    <div class="pager">
+      <a href="index.html">← 首页</a>
+      <a href="lesson-02.html">02 修改DDC缓存路径 →</a>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>

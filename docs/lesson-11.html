@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第11课 · 完善瞄准系统（上） · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link" href="index.html">首页</a>
+<a class="nav-link" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link active" href="lesson-11.html">11 完善瞄准系统（上）</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">第11课 · 完善瞄准系统（上）</h1>
+    <a class="video-link" href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=12" target="_blank" rel="noopener">▶ 对应视频（P12）</a>
+    <h2>本课要解决什么</h2>
+<ol>
+<li>在枪骨骼 <code>body</code> 上加 <strong>AimSocket</strong> 插槽，定位瞄准时头部应凑到的位置。</li>
+<li>父类 <code>BP_WeaponBase</code> 提供 <code>getAimSocketLocation</code> 函数（子类自动继承）。</li>
+<li>角色 <code>SpawnWeapon</code> 缓存 <code>Weapon</code> 引用；人物 ABP 每帧取插槽位置。</li>
+<li>AnimGraph：缓存 Basic 姿势 → 按 <code>E Player State</code> 混合；Aim 时用 <strong>Transform (Modify) Bone</strong> 把 Head 移到插槽。</li>
+<li>Debug：ABP 初始化早于武器生成，<code>Weapon</code> 可能为空 → 用 <strong>Is Valid</strong> 护住。</li>
+</ol>
+<hr>
+<h2>第一步：在枪骨骼上加 AimSocket</h2>
+<p>找到 <code>BP_VIRTUS</code>，在右侧骨骼网格体资产找到枪械主体，双击进入骨骼编辑：</p>
+<p><a class="img-link" href="assets/img/l11-virtus-open-skeleton.png" target="_blank" rel="noopener"><img src="assets/img/l11-virtus-open-skeleton.png" alt="打开枪械骨骼" loading="lazy"></a></p>
+<p>在右侧 <strong>body</strong> 骨骼上右键<strong>添加插槽</strong>，重命名 <strong><code>AimSocket</code></strong>，并调整相对位置。这一步的作用是<strong>定位</strong>：瞄准时让头能伸到这个位置。</p>
+<p><a class="img-link" href="assets/img/l11-aimsocket-create.png" target="_blank" rel="noopener"><img src="assets/img/l11-aimsocket-create.png" alt="添加 AimSocket" loading="lazy"></a></p>
+<h2>第二步：父类函数 getAimSocketLocation</h2>
+<p>写在 <strong><code>BP_WeaponBase</code></strong>（不要只写在 Virtus 子类，以后每把枪都能用）：新建函数，拖出 <code>Weapon</code> 组件 → <strong>Get Socket Location</strong>，Socket Name = <code>AimSocket</code>（建议从插槽名复制粘贴防打错）。函数把插槽位置返回为变量 <code>AimSocketLocationReturn</code>——注意这是<strong>世界空间</strong>坐标。</p>
+<p><a class="img-link" href="assets/img/l11-getaimsocketlocation-function.png" target="_blank" rel="noopener"><img src="assets/img/l11-getaimsocketlocation-function.png" alt="getAimSocketLocation 函数" loading="lazy"></a></p>
+<h2>第三步：验证子类继承</h2>
+<p>在 <code>BP_VIRTUS</code> 中点击「函数-重载」，可看到 <code>getAimSocketLocation</code>，说明创建成功：</p>
+<p><a class="img-link" href="assets/img/l11-virtus-override-function.png" target="_blank" rel="noopener"><img src="assets/img/l11-virtus-override-function.png" alt="子类重载可见" loading="lazy"></a></p>
+<h2>第四步：SpawnWeapon 提升 Weapon 变量</h2>
+<p>在 <code>BP_FPS_Player</code> 的 <code>SpawnWeapon</code> 函数中，把 <code>SpawnActor BP_VIRTUS</code> 的返回值提升为变量 <code>Weapon</code>（第 10 课已做），供动画蓝图访问该武器实例并取到插槽位置。</p>
+<h2>第五步：ABP_FPSPlayer Event Graph 取插槽位置</h2>
+<p><a class="img-link" href="assets/img/l11-abp-eventgraph-aimsocket.png" target="_blank" rel="noopener"><img src="assets/img/l11-abp-eventgraph-aimsocket.png" alt="Event Graph 取 AimSocket" loading="lazy"></a></p>
+<p>在已有的 Cast 玩家之后：GET <code>Weapon</code> → 调用 <code>getAimSocketLocation</code> → SET 存进变量（图上显示为 <code>Arm Socket Location Return</code>，与 <code>AimSocketLocationReturn</code> 是<strong>同一来源</strong>——虚幻显示变量名时会在大写字母之间自动加空格）。</p>
+<blockquote>
+<p><strong>注意 Is Valid 节点</strong>：整个流程执行顺序有先后——动画蓝图初始化很早，<code>SpawnWeapon</code> 可能在后几帧才给 <code>Weapon</code> 赋值。<code>Is Valid</code> 可以检测 Weapon 变量是否为空，仅 Valid 时才调函数，否则退出 PIE 会报「尝试读取 Weapon 时结果为无（Accessed None）」。</p>
+</blockquote>
+<h2>第六步：ABP_FPSPlayer AnimGraph 改头部骨骼</h2>
+<p><a class="img-link" href="assets/img/l11-abp-animgraph-headaim.png" target="_blank" rel="noopener"><img src="assets/img/l11-abp-animgraph-headaim.png" alt="AnimGraph 瞄准头部" loading="lazy"></a></p>
+<h3>实现的功能</h3>
+<blockquote>
+<p><strong>瞄准时，让角色的头部骨骼（Head）平移到枪械 AimSocket 插槽所在的世界坐标位置</strong>，实现「探头瞄准」的视觉效果；不瞄准时恢复原位。两者以 <strong>0.2 秒</strong>平滑过渡。</p>
+</blockquote>
+<p>核心思路：不是单独做一套 Aim 动画，而是用 <code>Transform (Modify) Bone</code> <strong>程序化地</strong>把 Head 骨骼「搬」到枪械上预留的 AimSocket 插槽位置。</p>
+<h3>数据流全景</h3>
+<pre><code>                    Arm Socket Location Return（= AimSocket 世界坐标）
+                           ↓ Translation
+Use cached pose &#39;Basic&#39;         ↓
+    ↓                      Transform (Modify) Bone ← Bone to Modify = Head
+    ↓ Local To Component          ↓
+    ↓                        Component To Local
+    ↓                              ↓
+    │                         Aim Pose（瞄准姿态：头部已偏移）
+    │                              │
+    │    Use cached pose &#39;Basic&#39;   │
+    │        ↓                     │
+    │    Default Pose（原始姿态）   │
+    │        │                     │
+    └───────┼─────────────────────┘
+            ↓
+    Blend Poses (E:PlayerState)    ← E Player State 枚举控制切换
+            ↓ Result
+       Output Pose → 屏幕上的角色
+</code></pre>
+<p>两条路径<strong>共用同一份 Basic 缓存</strong>：一路保持原样 → Default Pose（不瞄准：头部不动）；一路经过 Modify Bone 改了 Head 位置 → Aim Pose（瞄准：头部凑到枪前）。</p>
+<h3>节点逐个解释</h3>
+<table>
+<thead>
+<tr>
+<th align="left">节点</th>
+<th align="left">解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Use cached pose &#39;Basic&#39;</strong>（出现两次）</td>
+<td align="left">取出之前用 <code>New Save cached Pose</code> 保存的 Basic 状态机快照（状态机内部即第 07–09 课搭的 Move/Run/Aim 那套）。<strong>为什么用缓存</strong>：Basic 的姿势被用了两次（一路 Default、一路 Aim），缓存只算一次状态机，省性能</td>
+</tr>
+<tr>
+<td align="left"><strong>Local To Component</strong>（引擎自动创建）</td>
+<td align="left">把 <code>Use cached pose &#39;Basic&#39;</code> 连到 <code>Transform (Modify) Bone</code> 时，虚幻<strong>自动插入</strong>的「胶水」节点（非手工摆放），把姿势从骨骼本地空间转到组件空间，以匹配 Modify Bone 的工作空间</td>
+</tr>
+<tr>
+<td align="left"><strong>Transform (Modify) Bone</strong> ⭐ 核心节点</td>
+<td align="left">参数见下表。它在做的事：把 Head 骨骼从默认位置「搬」到 AimSocket 插槽所在位置，玩家看起来就像把头凑到枪前瞄准</td>
+</tr>
+<tr>
+<td align="left"><strong>Component To Local</strong>（引擎自动创建）</td>
+<td align="left">把 Modify Bone 的输出连回 Blend Poses 的 Aim Pose 脚时引擎<strong>自动插入</strong>，把改完的姿势从组件空间转回骨骼本地空间</td>
+</tr>
+<tr>
+<td align="left"><strong>第二个 Use cached pose &#39;Basic&#39;</strong></td>
+<td align="left">和第一个是同一份缓存的不同引用，直接作为 Default Pose（不瞄准时的原始姿态）</td>
+</tr>
+<tr>
+<td align="left"><strong>Blend Poses (E:PlayerState)</strong> ⭐ 状态混合</td>
+<td align="left">右键节点「添加元素引脚 Aim」——只加 Aim，因为这里是瞄准动作；Default/Aim Blend Time 都设 <strong>0.2</strong> 秒，让探头/缩头过渡舒缓；Active Enum Value 接 <code>E Player State</code></td>
+</tr>
+<tr>
+<td align="left"><strong>Output Pose</strong></td>
+<td align="left">AnimGraph 最终出口，混合后的结果就是角色每帧实际渲染的姿势</td>
+</tr>
+</tbody></table>
+<h3>Transform (Modify) Bone 参数</h3>
+<table>
+<thead>
+<tr>
+<th align="left">参数</th>
+<th align="left">值</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Bone to Modify</td>
+<td align="left"><strong>Head</strong></td>
+<td align="left">要修改的目标骨骼</td>
+</tr>
+<tr>
+<td align="left">Translation</td>
+<td align="left">接 <code>Arm Socket Location Return</code></td>
+<td align="left">头部要平移到的目标位置 = AimSocket 世界坐标</td>
+</tr>
+<tr>
+<td align="left">平移模式</td>
+<td align="left"><strong>Replace Existing（替换现有项）</strong></td>
+<td align="left">直接用目标位置替换 Head 原位置</td>
+</tr>
+<tr>
+<td align="left">平移空间</td>
+<td align="left"><strong>World Space（世界场景空间）</strong></td>
+<td align="left">因为 <code>getAimSocketLocation</code> 本身就是基于世界场景空间返回坐标，必须同空间才能对齐</td>
+</tr>
+<tr>
+<td align="left">Rotation</td>
+<td align="left">(0,0,0)</td>
+<td align="left">不旋转</td>
+</tr>
+<tr>
+<td align="left">Scale</td>
+<td align="left">(1,1,1)</td>
+<td align="left">不缩放</td>
+</tr>
+</tbody></table>
+<p><a class="img-link" href="assets/img/l11-modify-bone-config.png" target="_blank" rel="noopener"><img src="assets/img/l11-modify-bone-config.png" alt="Modify Bone 配置" loading="lazy"></a></p>
+<h3>设计亮点</h3>
+<ol>
+<li><strong>不需要美术做额外的 Aim 动画</strong>——只需一个 AimSocket 插槽位置 + 程序化移动 Head 骨骼。</li>
+<li><strong>换枪也通用</strong>——不同枪只要 AimSocket 位置不同，头部自动凑到不同位置。</li>
+<li><strong>过渡平滑</strong>——0.2 秒 Blend 时间让探头/缩头很自然。</li>
+</ol>
+<hr>
+<h2>易错点速查</h2>
+<ol>
+<li>插槽名拼错 → Get Socket Location 退回组件原点，头会漂。</li>
+<li>Modify Bone 用组件空间而非世界空间 → 对不齐。</li>
+<li>平移模式未设 Replace Existing。</li>
+<li>函数写在 Virtus 子类而非 WeaponBase → 每把枪重写一遍。</li>
+<li>Spawn 后未缓存 <code>Weapon</code> / ABP 未 <code>Is Valid</code> → 运行时报空（Accessed None）。</li>
+<li>忘了给枚举混合加 <strong>Aim</strong> 姿势脚，或 Aim 支路没接 Modify Bone。</li>
+<li>以为 <code>Local To Component</code> / <code>Component To Local</code> 要手工添加——它们是引擎连线时自动插入的。</li>
+</ol>
+<h2>下节预告</h2>
+<p>第 12 课：完善瞄准系统（下）——修快速移动时准星被拉成长条；瞄准时加放大倍率。</p>
+
+    
+    <div class="pager">
+      <a href="lesson-10.html">← 10 模块化设计及DeBug</a>
+      <span></span>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>

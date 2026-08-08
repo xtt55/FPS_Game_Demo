@@ -9,3 +9,11 @@
 # 文本类配置文件统一用 CRLF（UE 编辑器写出的格式）
 *.ini text eol=crlf
 *.uproject text eol=crlf
+
+# docs/ 静态站：网页文件统一 LF（构建脚本生成即 LF，避免换行符警告）
+docs/**/*.html text eol=lf
+docs/**/*.css text eol=lf
+docs/**/*.md text eol=lf
+docs/**/*.mjs text eol=lf
+docs/**/*.js text eol=lf
+docs/**/*.png binary

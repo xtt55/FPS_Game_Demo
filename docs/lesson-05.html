@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第05课 · 完善角色细节 · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link" href="index.html">首页</a>
+<a class="nav-link" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link active" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">第05课 · 完善角色细节</h1>
+    <a class="video-link" href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=6" target="_blank" rel="noopener">▶ 对应视频（P6）</a>
+    <h2>本课要解决什么</h2>
+<ol>
+<li>搭第一人称组件：手臂（骨骼网格体）+ 摄像机 + 枪（骨骼网格体）+ 配件（静态网格体）。</li>
+<li>摄像机绑 <strong>Head 插槽</strong>，走路视角跟骨骼颠簸。</li>
+<li>自定义摄像机后，用 <strong>Tick + Set World Rotation</strong> 恢复抬头低头。</li>
+<li>调小<strong>近剪切平面</strong>，避免枪口被裁切。</li>
+</ol>
+<hr>
+<h2>一、组件层级</h2>
+<p><code>BP_FPS_Player</code> 的组件树，注意层级关系：</p>
+<p><a class="img-link" href="assets/img/l05-component-hierarchy.png" target="_blank" rel="noopener"><img src="assets/img/l05-component-hierarchy.png" alt="组件层级" loading="lazy"></a></p>
+<h3>1. 手臂（Arm）</h3>
+<p>人物手臂，属于<strong>骨骼网格体组件</strong>（要播动画、有插槽，不能用静态网格体）。</p>
+<p>设置：</p>
+<ul>
+<li>缩放：全部为 0.25</li>
+<li>骨骼网格体资产：添加预设的手臂骨骼</li>
+<li>动画模式：先用「使用动画资产」套 idle 动作临时看效果；动画蓝图做好后（<a href="lesson-07-09.html">第07课</a>）改成「使用动画蓝图」</li>
+</ul>
+<p><a class="img-link" href="assets/img/l05-arm-settings.png" target="_blank" rel="noopener"><img src="assets/img/l05-arm-settings.png" alt="手臂设置" loading="lazy"></a></p>
+<h3>2. 摄像机（Camera）</h3>
+<p>摄像机组件，挂在 Arm 下。</p>
+<p>设置：</p>
+<ul>
+<li>旋转：X 轴旋转 -90 度，不然摄像机视角会倒置</li>
+<li>缩放：全部为 0.25</li>
+<li>父项套接字：关联到 <strong>Head</strong> 上，这样才能真实反馈角色走路的颠簸感</li>
+<li>摄像机选项-<strong>使用 Pawn 控制旋转：取消勾选</strong>，这样奔跑状态下摄像机就能随着角色晃动，增加枪械游戏的手感和沉浸感</li>
+</ul>
+<p><a class="img-link" href="assets/img/l05-camera-settings.png" target="_blank" rel="noopener"><img src="assets/img/l05-camera-settings.png" alt="摄像机设置" loading="lazy"></a></p>
+<h3>3. 枪（方法一：直接挂载组件）</h3>
+<blockquote>
+<p>这是早期做法。第 10 课会把枪拆成独立蓝图（方法二），届时这里的 Gun 组件会被删掉。</p>
+</blockquote>
+<p>枪，属于<strong>骨骼网格体组件</strong>：</p>
+<ul>
+<li>骨骼网格体资产：添加预设的枪骨骼</li>
+<li>要播放的动画：套用 idle 动作，和手臂保持一致</li>
+<li>当动画做好后，需要使用动画蓝图 <code>ABP_VIRTUL</code></li>
+</ul>
+<p><a class="img-link" href="assets/img/l05-gun-settings.png" target="_blank" rel="noopener"><img src="assets/img/l05-gun-settings.png" alt="枪设置" loading="lazy"></a></p>
+<h4>配件：枪管 / 弹匣 / 枪托</h4>
+<p>配件属于<strong>静态网格体组件</strong>（非通用知识点，属于枪械骨骼制作时的零件）。</p>
+<p>注意：需要设置好配件的父项套接字，否则会飘在半空中；如果设置了父项还飘移，把位置和旋转重置为 0。</p>
+<p><a class="img-link" href="assets/img/l05-gun-barrel.png" target="_blank" rel="noopener"><img src="assets/img/l05-gun-barrel.png" alt="枪管" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l05-gun-magazine.png" target="_blank" rel="noopener"><img src="assets/img/l05-gun-magazine.png" alt="弹匣" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l05-gun-stock.png" target="_blank" rel="noopener"><img src="assets/img/l05-gun-stock.png" alt="枪托" loading="lazy"></a></p>
+<hr>
+<h2>二、Tick 驱动 Arm 世界旋转（恢复上下看）</h2>
+<h3>为什么要多这一步</h3>
+<p>第 04 课的 Look 蓝图<strong>仍然要留着</strong>，两课是接力，不是替换：</p>
+<table>
+<thead>
+<tr>
+<th align="left">步骤</th>
+<th align="left">在哪</th>
+<th align="left">干什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">①</td>
+<td align="left">第04课 <code>IA_Look</code></td>
+<td align="left">鼠标 → Add Controller Yaw/Pitch Input，把「想看哪」写进 <strong>Controller 旋转</strong></td>
+</tr>
+<tr>
+<td align="left">②</td>
+<td align="left">本课 <code>Event Tick</code></td>
+<td align="left">读 Control Rotation → Set World Rotation 到 <strong>Arm</strong>，把变化同步给手臂/枪/相机</td>
+</tr>
+</tbody></table>
+<ul>
+<li><strong>没自定义 Camera 时</strong>：引擎塞默认摄像机，大致跟着控制器转，所以上下看「好像只靠①就够」。</li>
+<li><strong>有了自定义摄像机之后</strong>：引擎不再代管默认摄像机；必须再加②，把 Controller 的变化接到 Arm 上，否则会出现左右还行、上下没反应等问题。</li>
+</ul>
+<p>一句话：① 负责「算朝向」，② 负责「把朝向接到 Arm」。</p>
+<h3>节点逐个解释</h3>
+<p><a class="img-link" href="assets/img/l05-tick-arm-world-rotation.png" target="_blank" rel="noopener"><img src="assets/img/l05-tick-arm-world-rotation.png" alt="Tick 驱动 Arm" loading="lazy"></a></p>
+<table>
+<thead>
+<tr>
+<th align="left">节点</th>
+<th align="left">作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Event Tick</strong></td>
+<td align="left">每帧更新，视角才能连续跟手。自定义摄像头后，角色的上下转向会受限，需要 Tick 来实现平滑转向</td>
+</tr>
+<tr>
+<td align="left"><strong>Get Control Rotation</strong></td>
+<td align="left">读第 04 课 Look 写进 Controller 的朝向</td>
+</tr>
+<tr>
+<td align="left"><strong>Arm</strong>（变量）</td>
+<td align="left">人物的手臂（骨骼网格体组件引用）</td>
+</tr>
+<tr>
+<td align="left"><strong>Set World Rotation</strong></td>
+<td align="left">设置<strong>世界旋转</strong>，使手臂跟随视角旋转。Target 接 Arm</td>
+</tr>
+</tbody></table>
+<p>注意：连线是连接 <strong>Y 轴（Pitch）和 Z 轴（Yaw）</strong>，实现角色的上下和左右转向；<strong>X（Roll）不连</strong>，不要歪头。</p>
+<h3>为什么 Target 是 Arm，不是 Camera？</h3>
+<p>层级是 Arm → Camera / Gun，相机还绑在 Arm 骨骼的 <strong>Head 插槽</strong>上。转 Arm = 整套第一人称组件一起转；相机既跟 Arm，又跟头部插槽，走路时才会有真实晃动。</p>
+<h3>为什么用 World Rotation，不用 Relative？</h3>
+<p>Relative 会叠在父级/插槽本地空间上，容易和 Head 插槽搅在一起。World = 「Arm 在世界里就朝控制器这个方向」，和 Look 语义一致。</p>
+<h3>和 Walk「只连 Z」别混</h3>
+<table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left">Walk（移动）</th>
+<th align="left">本图（看）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">目的</td>
+<td align="left">贴地走</td>
+<td align="left">手臂/相机跟着看</td>
+</tr>
+<tr>
+<td align="left">用哪些轴</td>
+<td align="left">只要 <strong>Yaw(Z)</strong></td>
+<td align="left">要 <strong>Pitch(Y) + Yaw(Z)</strong></td>
+</tr>
+<tr>
+<td align="left">原因</td>
+<td align="left">抬头时别往天上飞</td>
+<td align="left">看就是要能抬头低头</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>三、近剪切平面（Near Clip Plane）</h2>
+<p>项目设置搜索 near clip，<strong>设置为 0.1</strong>。</p>
+<p>作用：决定摄像机能看到的最近距离，任何距离摄像机小于这个数值的物体都会被直接切掉。主要是为了防止角色离墙太近时遮挡视线；默认值偏大时还会把太近的枪口/手臂裁掉。改完<strong>重启引擎</strong>生效。</p>
+<p><a class="img-link" href="assets/img/l05-near-clip-plane.png" target="_blank" rel="noopener"><img src="assets/img/l05-near-clip-plane.png" alt="近剪切平面" loading="lazy"></a></p>
+<p>另外可把 Arm 上移到胶囊体横线附近（正常人眼高度）。</p>
+<hr>
+<h2>易错点</h2>
+<ol>
+<li>Arm/Gun 误用静态网格体 → 无骨骼、难挂插槽/动画。</li>
+<li>点成「电影摄像机」（应选普通摄像机组件）。</li>
+<li>Tick 用了 Relative Rotation。</li>
+<li>Near Clip 改完不重启。</li>
+<li>配件不指定父项套接字 / 不归零 Transform。</li>
+<li>Camera 的「使用 Pawn 控制旋转」忘关 → 奔跑时没有预期晃动。</li>
+</ol>
+<h2>下节预告</h2>
+<p>第 06 课：制作角色能力系统——用枚举 + <code>UpdatePlayerState</code> 统一算出 Idle / Walk / Run / Aim。</p>
+
+    
+    <div class="pager">
+      <a href="lesson-04.html">← 04 实现角色基本能力</a>
+      <a href="lesson-06.html">06 制作角色能力系统 →</a>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>

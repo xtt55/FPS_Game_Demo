@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第03课 · 配置游戏模式及输入 · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link" href="index.html">首页</a>
+<a class="nav-link" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link active" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">第03课 · 配置游戏模式及输入</h1>
+    <a class="video-link" href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=4" target="_blank" rel="noopener">▶ 对应视频（P4）</a>
+    <h2>本课要解决什么</h2>
+<ol>
+<li>用自定义 <strong>GameMode</strong> 指定默认生成的角色（Pawn）。</li>
+<li>搞清<strong>项目默认 GameMode</strong> vs <strong>关卡游戏模式重载</strong>。</li>
+<li>用 <strong>Enhanced Input</strong> 建好 IA / IMC，并把 WASD、鼠标视角、跑步、瞄准映射好。
+<strong>本课不写移动逻辑</strong>——配完后按键没反应是正常的。</li>
+</ol>
+<hr>
+<h2>一、GameMode：指定用哪个角色</h2>
+<h3>1. 创建 BP_FPS_GameMode</h3>
+<p>位置：<code>Scripts/System</code>。</p>
+<p>新建蓝图类 → 父类选<strong>游戏模式基础（Game Mode Base）</strong>，命名 <code>BP_FPS_GameMode</code>（加 FPS 前缀，避免和引擎自带 GameMode 搞混）。</p>
+<p>打开 <code>BP_FPS_GameMode</code>，右侧类设置里把**默认 Pawn 类（Default Pawn Class）**改为 <code>BP_FPS_Player</code>，编译保存。</p>
+<p><a class="img-link" href="assets/img/l03-gamemode-default-pawn.png" target="_blank" rel="noopener"><img src="assets/img/l03-gamemode-default-pawn.png" alt="GameMode 默认 Pawn 类" loading="lazy"></a></p>
+<p>此时只是「GameMode 知道要用哪个角色」，<strong>还没有告诉引擎用这个 GameMode</strong>。直接运行仍是默认自由视角。</p>
+<h3>2. 两种指定 GameMode 的方式</h3>
+<table>
+<thead>
+<tr>
+<th align="left">方式</th>
+<th align="left">路径</th>
+<th align="left">作用范围</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">项目设置（全局修改，推荐）</td>
+<td align="left">项目设置 → 游戏 → 默认模式</td>
+<td align="left">整个项目</td>
+</tr>
+<tr>
+<td align="left">关卡重载（关卡修改）</td>
+<td align="left">世界场景设置 → 游戏模式重载</td>
+<td align="left"><strong>仅当前关卡</strong></td>
+</tr>
+</tbody></table>
+<p>全局修改：</p>
+<p><a class="img-link" href="assets/img/l03-project-settings-gamemode.png" target="_blank" rel="noopener"><img src="assets/img/l03-project-settings-gamemode.png" alt="项目设置-默认游戏模式" loading="lazy"></a></p>
+<p>关卡修改：</p>
+<p><a class="img-link" href="assets/img/l03-world-settings-gamemode.png" target="_blank" rel="noopener"><img src="assets/img/l03-world-settings-gamemode.png" alt="世界场景设置-游戏模式重载" loading="lazy"></a></p>
+<p>注意：换关卡后关卡重载不会跟着走，所以一般用项目设置做全局默认。</p>
+<p>设好后运行：按键/鼠标都没反应 → 说明已切到自定义模式（还没写输入逻辑，<strong>没反应是正常的</strong>）。</p>
+<hr>
+<h2>二、Enhanced Input 资产</h2>
+<p>位置：<code>Scripts/Input</code>（之后所有输入资产放这里）。</p>
+<h3>1. 四个输入操作（IA）</h3>
+<table>
+<thead>
+<tr>
+<th align="left">资产</th>
+<th align="left">值类型</th>
+<th align="left">用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>IA_Look</code></td>
+<td align="left"><strong>Vector2D</strong></td>
+<td align="left">控制角色视角旋转</td>
+</tr>
+<tr>
+<td align="left"><code>IA_Move</code></td>
+<td align="left"><strong>Vector2D</strong></td>
+<td align="left">控制角色移动</td>
+</tr>
+<tr>
+<td align="left"><code>IA_Run</code></td>
+<td align="left"><strong>bool</strong></td>
+<td align="left">控制角色是否跑步（只有跑/不跑两种状态）</td>
+</tr>
+<tr>
+<td align="left"><code>IA_Aim</code></td>
+<td align="left"><strong>bool</strong></td>
+<td align="left">控制角色是否瞄准（只有瞄/不瞄两种状态）</td>
+</tr>
+</tbody></table>
+<p>默认往往是布尔，Look/Move 必须改成 Vector2D。</p>
+<h3>2. 一个输入映射上下文（IMC）</h3>
+<p><code>IMC_FPS_Input</code>：控制 FPS 游戏的输入总映射表。</p>
+<p>在 <strong>Default Key Mappings → Mappings</strong> 中添加 IA_Look、IA_Move、IA_Run 和 IA_Aim（注意点<strong>上面那个 <code>+</code></strong>，下面还有一个长得像的加号，别点错）。</p>
+<h3>3. 各 IA 的按键绑定</h3>
+<p><strong>IA_Look</strong>：</p>
+<ul>
+<li>添加控制：鼠标移动，值为鼠标 XY 2D 轴</li>
+<li>鼠标移动添加修改器-<strong>否定（Negate）</strong>，避免鼠标向上移动视角向下</li>
+</ul>
+<p><a class="img-link" href="assets/img/l03-imc-ia-look-negate.png" target="_blank" rel="noopener"><img src="assets/img/l03-imc-ia-look-negate.png" alt="IA_Look 映射" loading="lazy"></a></p>
+<p><strong>IA_Move</strong>：添加 WASD 4 个键盘按键</p>
+<table>
+<thead>
+<tr>
+<th align="left">键</th>
+<th align="left">修改器</th>
+<th align="left">作用（类比二维坐标系）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">W</td>
+<td align="left">无</td>
+<td align="left">前进，Y 轴正方向</td>
+</tr>
+<tr>
+<td align="left">S</td>
+<td align="left"><strong>否定</strong></td>
+<td align="left">后退，Y 轴反方向</td>
+</tr>
+<tr>
+<td align="left">A</td>
+<td align="left"><strong>拌合输入轴值（Swizzle）</strong> + <strong>否定</strong></td>
+<td align="left">换到 X 轴上，且左为负</td>
+</tr>
+<tr>
+<td align="left">D</td>
+<td align="left"><strong>拌合输入轴值（Swizzle）</strong></td>
+<td align="left">换到 X 轴上</td>
+</tr>
+</tbody></table>
+<p><a class="img-link" href="assets/img/l03-imc-ia-move-wasd.png" target="_blank" rel="noopener"><img src="assets/img/l03-imc-ia-move-wasd.png" alt="IA_Move 映射" loading="lazy"></a></p>
+<p><strong>IA_Run</strong>：左 Ctrl</p>
+<p><a class="img-link" href="assets/img/l03-imc-ia-run-ctrl.png" target="_blank" rel="noopener"><img src="assets/img/l03-imc-ia-run-ctrl.png" alt="IA_Run 映射" loading="lazy"></a></p>
+<p><strong>IA_Aim</strong>：鼠标右键</p>
+<p><a class="img-link" href="assets/img/l03-imc-ia-aim-rightmouse.png" target="_blank" rel="noopener"><img src="assets/img/l03-imc-ia-aim-rightmouse.png" alt="IA_Aim 映射" loading="lazy"></a></p>
+<hr>
+<h2>易错点速查</h2>
+<ol>
+<li>建了 GameMode 却忘了项目设置 / 关卡重载 → 仍是默认视角。</li>
+<li>只设关卡重载 → 换图失效。</li>
+<li>IMC 点错加号（下面那个）。</li>
+<li>Look/Move 忘改 Vector2D。</li>
+<li>A/D 漏 Swizzle，或 A 漏 Negate → 左右轴错乱。</li>
+<li>本课配完没反应 → <strong>正常</strong>，逻辑在下一课。</li>
+</ol>
+<h2>下节预告</h2>
+<p>第 04 课：在 <code>BP_FPS_Player</code> 里写<strong>移动 + 视角旋转</strong>逻辑，角色真正动起来。</p>
+
+    
+    <div class="pager">
+      <a href="lesson-02.html">← 02 修改DDC缓存路径</a>
+      <a href="lesson-04.html">04 实现角色基本能力 →</a>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>

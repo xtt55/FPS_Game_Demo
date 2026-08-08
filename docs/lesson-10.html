@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第10课 · 模块化设计及DeBug · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link" href="index.html">首页</a>
+<a class="nav-link" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link active" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">第10课 · 模块化设计及DeBug</h1>
+    <a class="video-link" href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=11" target="_blank" rel="noopener">▶ 对应视频（P11）</a>
+    <h2>本课要解决什么</h2>
+<ol>
+<li>开课小坑：摄像机 <strong>Use Pawn Control Rotation</strong> 必须关掉（第 05 课已配，此处验证）。</li>
+<li><strong>模块化</strong>：<code>BP_WeaponBase</code> 父类 + 具体枪继承；从角色组件树删掉内嵌 Gun。</li>
+<li><code>SpawnWeapon</code> 函数：生成枪 Actor → Owner=玩家 → Attach 到 Arm。</li>
+<li>Debug：部件 <strong>NoCollision</strong>（卡碰撞）、函数要在 BeginPlay 调用。</li>
+<li>枪械 ABP 重构：Initialize 里缓存人物动画蓝图引用；Update 时从<strong>人物 ABP</strong> 拉变量，避免人/枪不同步。</li>
+</ol>
+<hr>
+<h2>一、为什么要把枪拆出去</h2>
+<p>第 05 课把枪直接嵌在角色组件树里是为了快速预览，不符合扩展规范。拆成独立蓝图的目的是<strong>解耦</strong>：</p>
+<table>
+<thead>
+<tr>
+<th align="left">点</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">复用</td>
+<td align="left">新角色直接挂已有武器，不必每个角色重做枪逻辑</td>
+</tr>
+<tr>
+<td align="left">可维护</td>
+<td align="left">手感 / 后坐 / 伤害改枪蓝图即可，不牵动角色</td>
+</tr>
+<tr>
+<td align="left">扩展</td>
+<td align="left">新枪继承父类；角色侧尽量不改</td>
+</tr>
+</tbody></table>
+<p>一句话：<strong>职责单一，改一块不影响另一块。</strong></p>
+<h2>二、枪械基类 BP_WeaponBase</h2>
+<p>位置：<code>Scripts/Weapon/Base</code>。类型：蓝图类-Actor。定义：枪械基类，保存枪械共有属性，例如子弹。</p>
+<p>配置：</p>
+<p><strong>1. 创建骨骼网格体组件，覆盖掉默认的根组件 DefaultSceneRoot</strong>：</p>
+<p><a class="img-link" href="assets/img/l10-weaponbase-root.png" target="_blank" rel="noopener"><img src="assets/img/l10-weaponbase-root.png" alt="WeaponBase 骨骼网格体覆盖根组件" loading="lazy"></a></p>
+<p><strong>2. 添加变量</strong>：<code>Ammo</code> 是子弹数量，类型为整数。</p>
+<p><a class="img-link" href="assets/img/l10-weaponbase-ammo.png" target="_blank" rel="noopener"><img src="assets/img/l10-weaponbase-ammo.png" alt="WeaponBase Ammo 变量" loading="lazy"></a></p>
+<p><strong>3. 保存和编译。</strong></p>
+<h2>三、子类 BP_VIRTUS</h2>
+<p>位置：<code>Scripts/Weapon</code>。新建蓝图时<strong>父类选 <code>BP_WeaponBase</code></strong>（不要再选 Actor）。Virtus 是枪械名，类似 AK47。</p>
+<p><a class="img-link" href="assets/img/l10-virtus-create.png" target="_blank" rel="noopener"><img src="assets/img/l10-virtus-create.png" alt="创建 BP_VIRTUS" loading="lazy"></a></p>
+<p><strong>第一步：查看从父类继承的变量</strong>——点击类默认值：</p>
+<p><a class="img-link" href="assets/img/l10-virtus-class-defaults.png" target="_blank" rel="noopener"><img src="assets/img/l10-virtus-class-defaults.png" alt="类默认值" loading="lazy"></a></p>
+<p><strong>第二步：配置枪械骨骼</strong>（Weapon 骨骼网格体选 SK_MCX-VIRTUS），并挂好配件（静态网格体 + 对应插槽）：</p>
+<p><a class="img-link" href="assets/img/l10-virtus-weapon-mesh.png" target="_blank" rel="noopener"><img src="assets/img/l10-virtus-weapon-mesh.png" alt="枪械骨骼" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l10-virtus-barrel.png" target="_blank" rel="noopener"><img src="assets/img/l10-virtus-barrel.png" alt="枪管" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l10-virtus-magazine.png" target="_blank" rel="noopener"><img src="assets/img/l10-virtus-magazine.png" alt="弹匣" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l10-virtus-scope.png" target="_blank" rel="noopener"><img src="assets/img/l10-virtus-scope.png" alt="倍镜" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l10-virtus-stock.png" target="_blank" rel="noopener"><img src="assets/img/l10-virtus-stock.png" alt="枪托" loading="lazy"></a></p>
+<blockquote>
+<p><strong>注意</strong>：要将枪械主体、枪管、弹匣、倍镜、枪托等骨骼的碰撞预设改为 <strong>NoCollision</strong>，否则会和角色碰撞冲突，导致人物方向失灵、无法移动。</p>
+</blockquote>
+<p><a class="img-link" href="assets/img/l10-virtus-nocollision.png" target="_blank" rel="noopener"><img src="assets/img/l10-virtus-nocollision.png" alt="NoCollision" loading="lazy"></a></p>
+<h2>四、角色侧：删旧枪 + SpawnWeapon 函数</h2>
+<p>在 <code>BP_FPS_Player</code> 里删掉组件树上的 Gun 及子附件（第 05 课方法一的枪），新建函数 <code>SpawnWeapon</code> 生成枪械：</p>
+<p><a class="img-link" href="assets/img/l10-spawnweapon-function.png" target="_blank" rel="noopener"><img src="assets/img/l10-spawnweapon-function.png" alt="SpawnWeapon 函数" loading="lazy"></a></p>
+<h3>节点逐个解释</h3>
+<table>
+<thead>
+<tr>
+<th align="left">节点</th>
+<th align="left">解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>SpawnActor BP_VIRTUS</strong></td>
+<td align="left">在场景中生成枪械 Actor。<strong>Spawn Transform 的 Location 要右键「分割结构体引脚」</strong>——重组状态没有值，编译会报错</td>
+</tr>
+<tr>
+<td align="left"><strong>Owner → Self</strong></td>
+<td align="left">要拉出 Owner 脚指向 self（玩家自身），否则后续枪械动画蓝图无法通过 Get Owner 找回角色</td>
+</tr>
+<tr>
+<td align="left"><strong>提升为变量 Weapon</strong></td>
+<td align="left">把 SpawnActor 的返回值<strong>提升为变量 <code>Weapon</code></strong>，方便后续引用生成的枪械实例——例如第 11 课瞄准时，头部骨骼要往枪械实例的插槽凑</td>
+</tr>
+<tr>
+<td align="left"><strong>Attach Actor to Component</strong></td>
+<td align="left">注意是附加到<strong>组件</strong>（Parent = Arm），不是附加到 Actor；Location/Rotation/Scale Rule 用 Keep Relative</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>坑</strong>：函数写完不会自己跑。要在 <strong>Event BeginPlay</strong> 链上调用 <code>SpawnWeapon</code>（见<a href="lesson-04.html">第04课</a>的 BeginPlay 图，最后一个节点就是它）。</p>
+</blockquote>
+<h2>五、枪械动画蓝图失效与重构（本课核心）</h2>
+<h3>背景：拆出去后旧逻辑失效</h3>
+<p>枪拆成独立 Actor 后，枪械动画蓝图的 <strong>Owning Actor 是 <code>BP_VIRTUS</code></strong>，不再是 <code>BP_FPS_Player</code>。第 07 课那套 <code>Try Get Pawn Owner → Cast To BP_FPS_Player</code> 直接失效；而且移动/状态变量都在角色蓝图里。</p>
+<h3>两个动画蓝图的关系（先理清对象）</h3>
+<table>
+<thead>
+<tr>
+<th align="left">动画蓝图</th>
+<th align="left">含义</th>
+<th align="left">角色</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>ABP_FPSPlayer</strong></td>
+<td align="left">人物动画蓝图</td>
+<td align="left"><strong>权威数据源</strong>：从角色 Cast 拿到 Move X / Move Y / E Player State / Character Movement，自己持有，<strong>保持不变</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>ABP_VIRTUL</strong></td>
+<td align="left">枪械动画蓝图（本课改它）</td>
+<td align="left"><strong>复用者</strong>：不直接 Cast 角色，而是引用 ABP_FPSPlayer，读它的变量驱动枪械动画</td>
+</tr>
+</tbody></table>
+<h3>重构做了两件事</h3>
+<ol>
+<li>把昂贵的<strong>多层 Cast 链</strong>从每帧的 <code>Event BlueprintUpdateAnimation</code> 挪到只触发一次的 <code>Event BlueprintInitializeAnimation</code>。</li>
+<li>上链把「人物动画蓝图 ABP_FPSPlayer 的引用」缓存成变量 <code>As ABP_FPSPlayer</code>，下链每帧直接复用这个引用读人物变量，不再重新 Cast。</li>
+</ol>
+<p>重构后的 Event Graph：</p>
+<p><a class="img-link" href="assets/img/l10-abp-virtul-eventgraph-refactored.png" target="_blank" rel="noopener"><img src="assets/img/l10-abp-virtul-eventgraph-refactored.png" alt="ABP_VIRTUL 重构后 Event Graph" loading="lazy"></a></p>
+<h3>完整上链（挂在 Event BlueprintInitializeAnimation，只跑一次）</h3>
+<blockquote>
+<p>这是<strong>枪械 ABP_VIRTUL</strong> 的初始化事件，目标是拿到<strong>人物动画蓝图 ABP_FPSPlayer</strong> 的引用。</p>
+</blockquote>
+<pre><code>Event BlueprintInitializeAnimation   ← 枪械动画蓝图初始化时触发一次（类似 BeginPlay）
+  ↓
+Try Get Pawn Owner                   ← 获取拥有此枪械动画蓝图的 Pawn
+  ↓
+Get Owning Actor                     ← 从 Pawn 取得其拥有者 Actor；输出连到下方 Cast 的 Object 引脚
+  ↓
+Cast To BP_VIRTUS                    ← Object 脚接 Get Owning Actor；确认是枪械蓝图类型
+  ↓
+Get Owner                            ← 从 BP_VIRTUS 拿回它的 Owner（即生成它的玩家）
+  ↓
+Cast To BP_FPS_Player                ← 转成具体的角色蓝图；唯一目的：拿到它下面的 Arm 变量
+  ↓
+Arm                                  ← 【关键】BP_FPS_Player 自身定义的变量（手臂骨骼网格体组件）；
+                                       Cast 输出（As BP FPSPlayer）直接连到这个变量的 Target 引脚
+  ↓
+Get Anim Instance                    ← Target 接的是 Arm（骨骼网格体），不是角色本身；
+                                       Arm 上挂载的正是人物动画蓝图 ABP_FPSPlayer
+  ↓
+Cast To ABP_FPSPlayer                ← 转成「人物动画蓝图」具体类型
+  ↓
+SET → 存为变量 As ABP_FPSPlayer      ← 缓存「人物动画蓝图引用」，供下链每帧复用
+</code></pre>
+<h3>为什么 Cast To BP_FPS_Player → Arm 这一步不能漏</h3>
+<p><code>Get Anim Instance</code> 是 <strong>SkeletalMeshComponent 的函数</strong>——它的 Target 脚必须接一个<strong>骨骼网格体</strong>，不能直接接角色 Actor。而人物动画蓝图 <code>ABP_FPSPlayer</code> 正是挂在角色蓝图的 <strong><code>Arm</code> 变量</strong>（手臂骨骼网格体）上的。所以必须先 Cast 出角色 → 取出 <code>Arm</code>（<strong>这就是这次 Cast 的唯一目的</strong>）→ 再调 <code>Get Anim Instance</code>。</p>
+<h3>完整下链（挂在 Event BlueprintUpdateAnimation，每帧跑）</h3>
+<pre><code>Event BlueprintUpdateAnimation       ← 每帧触发（类似 Tick）
+  ↓
+As ABP_FPSPlayer（上链缓存的人物动画蓝图引用，直接拖出来用）
+  ├─ 读 Move X            → SET Move X
+  ├─ 读 Move Y            → SET Move Y
+  ├─ 读 E Player State    → SET E Player State
+  └─ 读 Character Movement → SET Character Movement
+</code></pre>
+<p>下链<strong>不再各自走一遍 Cast 链</strong>，整张图 Cast 链只执行一次。枪械因此与人物<strong>共用同一份变量</strong>。</p>
+<h3>两个事件的根本区别</h3>
+<table>
+<thead>
+<tr>
+<th align="left">事件</th>
+<th align="left">触发频率</th>
+<th align="left">等价物</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>Event BlueprintInitializeAnimation</code></td>
+<td align="left"><strong>只一次</strong>（动画蓝图初始化时）</td>
+<td align="left">类似 BeginPlay</td>
+</tr>
+<tr>
+<td align="left"><code>Event BlueprintUpdateAnimation</code></td>
+<td align="left"><strong>每帧</strong>（动画更新时）</td>
+<td align="left">类似 Tick</td>
+</tr>
+</tbody></table>
+<h3>重构的真正目的（FPS 语境）</h3>
+<p><strong>① 性能层</strong>：多层 Cast（Get Owner + Arm + Get Anim Instance + 两次 Cast）有开销。旧版放每帧 Update 里每帧重转，浪费；新版挪到 Initialize 只执行一次，之后每帧零 Cast。</p>
+<p><strong>② 业务层（FPS 特有，本质原因）</strong>：第一人称里，<strong>手臂骨骼和枪械骨骼要使用同一份变量</strong>。如果枪械每帧自己重新 Cast、重新同步，引擎会在「枪械的变量」与「人物的变量」之间频繁切换调用，后果是：手臂和枪的动作<strong>同步失败</strong>（父子挂载错位、枪跟不上手）、动作<strong>卡顿/抖动</strong>。</p>
+<p>把人物动画蓝图引用在初始化时一次性锁定、每帧只更新变量值，就能保证枪械与人物<strong>始终从同一份变量（ABP_FPSPlayer 持有）驱动</strong>，同步稳定、动作流畅。</p>
+<h3>两版对比</h3>
+<p>重构前（旧版，单链、每帧 Cast 角色）vs 重构后（新版，双事件、初始化缓存）：</p>
+<p><a class="img-link" href="assets/img/l10-abp-virtul-compare-1.png" target="_blank" rel="noopener"><img src="assets/img/l10-abp-virtul-compare-1.png" alt="对比 1" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l10-abp-virtul-compare-2.png" target="_blank" rel="noopener"><img src="assets/img/l10-abp-virtul-compare-2.png" alt="对比 2" loading="lazy"></a></p>
+<pre><code>旧版：Event BlueprintUpdateAnimation → TryGetPawnOwner → Cast BP_FPS_Player → 4×SET
+        ↑ 枪械每帧都 Cast 角色拿变量（耗性能 + 人/枪同步易失败）
+
+新版：Event BlueprintInitializeAnimation → (Get Owning Actor → BP_VIRTUS → Get Owner
+        → BP_FPS_Player → Arm → Get Anim Instance → Cast ABP_FPSPlayer) → SET 缓存   ← 只一次
+      Event BlueprintUpdateAnimation     → 读缓存的人物 ABP 引用 → 4×SET              ← 每帧，零 Cast
+</code></pre>
+<h3>ABP_VIRTUL 的 AnimGraph</h3>
+<p>同 <code>ABP_FPSPlayer</code>（状态机 + 混合空间），注意连线，否则会出现动画不生效的问题：</p>
+<p><a class="img-link" href="assets/img/l10-abp-virtul-animgraph.png" target="_blank" rel="noopener"><img src="assets/img/l10-abp-virtul-animgraph.png" alt="ABP_VIRTUL AnimGraph" loading="lazy"></a></p>
+<hr>
+<h2>六、附：Cast To 概念补充</h2>
+<h3>Cast To 是什么意思</h3>
+<p><code>Cast To</code> 是 UE 的<strong>类型转换</strong>节点。它把一个「泛化」的对象引用精确成「具体的子类类型」，这样才能访问该具体类型才有的成员。</p>
+<p><strong>类比</strong>：街上看到一只 <code>Animal</code>（动物），动物不会「写代码」。但当你确认它其实是 <code>Programmer</code>（程序员），就可以让它写代码。这个「确认它是程序员」的动作，就是 <code>Cast To Programmer</code>。</p>
+<p>这本质是<strong>面向对象继承的向下转型（downcast）</strong>：<code>Pawn</code> 是父类，<code>BP_FPS_Player</code> 是子类。父类引用看不到子类新增的成员，除非向下转型。</p>
+<h3>为什么需要这么多 Cast To</h3>
+<p>因为引用是<strong>一层层往下拿</strong>的，每层返回的都是「更泛的类型」，必须逐个 Cast 才能往下挖。每个 Cast 都在「解锁下一层的专属能力」：</p>
+<table>
+<thead>
+<tr>
+<th align="left">Cast 节点</th>
+<th align="left">输入来源</th>
+<th align="left">输出用途</th>
+<th align="left">解锁的是什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>Cast To BP_VIRTUS</code></td>
+<td align="left">Get Owning Actor</td>
+<td align="left">→ Get Owner.Target</td>
+<td align="left">确认是枪械蓝图类型，才能调它的 Get Owner</td>
+</tr>
+<tr>
+<td align="left"><strong><code>Cast To BP_FPS_Player</code></strong></td>
+<td align="left">Get Owner</td>
+<td align="left"><strong>→ Arm.Target</strong></td>
+<td align="left">确认是角色蓝图类型，<strong>才能取出它下面的 Arm 变量</strong></td>
+</tr>
+<tr>
+<td align="left"><code>Cast To ABP_FPSPlayer</code></td>
+<td align="left">Get Anim Instance</td>
+<td align="left">→ SET 缓存</td>
+<td align="left">确认是人物动画蓝图类型，才能缓存引用供下链复用</td>
+</tr>
+</tbody></table>
+<h3>风险：Cast 可能失败</h3>
+<p>如果运行时对象其实不是目标类型，整条链会<strong>静默断掉</strong>。每个 Cast 节点都有 <code>Cast Failed</code> 白色执行输出分支——正规做法是接个 <code>Print String</code> 调试，确认线上不会静默失败。</p>
+<h3>前提与注意事项</h3>
+<ul>
+<li><strong>前提</strong>：角色 / 动画蓝图对应关系在运行期稳定（单机 FPS demo 一般成立）；若游戏里会动态换角色 / 切换 Pawn，「只 Cast 一次」会拿到过期引用，需要在 <code>On Possessed</code> 之类事件里重新 Cast。</li>
+<li><strong>命名提醒</strong>：<code>As ABP_FPSPlayer</code> 这个变量名在枪械蓝图里存的是「人物动画蓝图引用」，容易一眼看混（像是枪械自己）。可改名 <code>OwningCharABP</code> 或 <code>CharacterAnimBP</code> 更清晰。</li>
+</ul>
+<hr>
+<h2>易错点速查</h2>
+<ol>
+<li>Camera <strong>Use Pawn Control Rotation</strong> 忘关 → 晃动不对。</li>
+<li>Spawn Transform 未分割 → 编译报无效；分割成默认 0 即可。</li>
+<li>写了 <code>SpawnWeapon</code> 却没在 BeginPlay 调用 → 场景里没枪。</li>
+<li>Owner 未设为 Self → 枪械 ABP <code>Get Owner</code> 拿不到玩家。</li>
+<li>Attach 点错「附加到 Actor」（应是附加到组件）。</li>
+<li>枪械部件有碰撞 → 和角色胶囊互卡，方向失灵。</li>
+<li>枪械 ABP 仍每帧 Cast / 仍直接读 Player → 性能差或动画不同步。</li>
+<li>两套 ABP 都要改完再狂按瞄准验证。</li>
+</ol>
+<h2>下节预告</h2>
+<p>第 11 课：完善瞄准系统（上）——用 AimSocket + Transform (Modify) Bone 把头部凑到瞄具前。</p>
+
+    
+    <div class="pager">
+      <a href="lesson-07-09.html">← 07-09 制作动画系统</a>
+      <a href="lesson-11.html">11 完善瞄准系统（上） →</a>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>
