@@ -11,7 +11,7 @@
 - [ ] 加配件（静态网格体）：枪管 / 弹匣 / 倍镜 / 枪托，各自指定父项插槽；飘移就把位置/旋转重置为 0
 - [ ] **全部件（含主体）碰撞预设 = NoCollision**，否则卡角色
 - [ ] 骨骼网格的动画类 = 这把枪的 ABP（新建或复用）
-- [ ] 枪械 ABP：Initialize 缓存人物 ABP 引用 → Update 读人物变量（直接照抄 ABP_VIRTUL）
+- [ ] 枪械 ABP：Initialize 缓存人物 ABP 引用 → Update 读人物变量（直接照抄 ABP_Virtus）
 - [ ] 枪械混合空间 BS：轴/平滑时间/平滑类型**与人物 BS 保持一致**
 - [ ] 骨骼 body 上加 **AimSocket** 插槽并调位置（瞄准用，[第11课](lesson-11.html)）
 - [ ] `BP_FPS_Player` 的 `SpawnWeapon`：SpawnActor 的 Class 换成新枪（或做换枪逻辑）

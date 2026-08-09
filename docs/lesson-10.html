@@ -144,7 +144,7 @@
 <td align="left"><strong>权威数据源</strong>：从角色 Cast 拿到 Move X / Move Y / E_PlayerState / Character Movement，自己持有，<strong>保持不变</strong></td>
 </tr>
 <tr>
-<td align="left"><strong>ABP_VIRTUL</strong></td>
+<td align="left"><strong>ABP_Virtus</strong></td>
 <td align="left">枪械动画蓝图（本课改它）</td>
 <td align="left"><strong>复用者</strong>：不直接 Cast 角色，而是引用 ABP_FPSPlayer，读它的变量驱动枪械动画</td>
 </tr>
@@ -155,10 +155,10 @@
 <li>上链把「人物动画蓝图 ABP_FPSPlayer 的引用」缓存成变量 <code>As ABP_FPSPlayer</code>，下链每帧直接复用这个引用读人物变量，不再重新 Cast。</li>
 </ol>
 <p>重构后的 Event Graph：</p>
-<p><a class="img-link" href="assets/img/l10-abp-virtul-eventgraph-refactored.png" target="_blank" rel="noopener"><img src="assets/img/l10-abp-virtul-eventgraph-refactored.png" alt="ABP_VIRTUL 重构后 Event Graph" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l10-abp-virtus-eventgraph-refactored.png" target="_blank" rel="noopener"><img src="assets/img/l10-abp-virtus-eventgraph-refactored.png" alt="ABP_Virtus 重构后 Event Graph" loading="lazy"></a></p>
 <h3>完整上链（挂在 Event BlueprintInitializeAnimation，只跑一次）</h3>
 <blockquote>
-<p>这是<strong>枪械 ABP_VIRTUL</strong> 的初始化事件，目标是拿到<strong>人物动画蓝图 ABP_FPSPlayer</strong> 的引用。</p>
+<p>这是<strong>枪械 ABP_Virtus</strong> 的初始化事件，目标是拿到<strong>人物动画蓝图 ABP_FPSPlayer</strong> 的引用。</p>
 </blockquote>
 <pre><code>Event BlueprintInitializeAnimation   ← 枪械动画蓝图初始化时触发一次（类似 BeginPlay）
   ↓
@@ -220,8 +220,8 @@ As ABP_FPSPlayer（上链缓存的人物动画蓝图引用，直接拖出来用�
 <p>把人物动画蓝图引用在初始化时一次性锁定、每帧只更新变量值，就能保证枪械与人物<strong>始终从同一份变量（ABP_FPSPlayer 持有）驱动</strong>，同步稳定、动作流畅。</p>
 <h3>两版对比</h3>
 <p>重构前（旧版，单链、每帧 Cast 角色）vs 重构后（新版，双事件、初始化缓存）：</p>
-<p><a class="img-link" href="assets/img/l10-abp-virtul-compare-1.png" target="_blank" rel="noopener"><img src="assets/img/l10-abp-virtul-compare-1.png" alt="对比 1" loading="lazy"></a></p>
-<p><a class="img-link" href="assets/img/l10-abp-virtul-compare-2.png" target="_blank" rel="noopener"><img src="assets/img/l10-abp-virtul-compare-2.png" alt="对比 2" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l10-abp-virtus-compare-1.png" target="_blank" rel="noopener"><img src="assets/img/l10-abp-virtus-compare-1.png" alt="对比 1" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l10-abp-virtus-compare-2.png" target="_blank" rel="noopener"><img src="assets/img/l10-abp-virtus-compare-2.png" alt="对比 2" loading="lazy"></a></p>
 <pre><code>旧版：Event BlueprintUpdateAnimation → TryGetPawnOwner → Cast BP_FPS_Player → 4×SET
         ↑ 枪械每帧都 Cast 角色拿变量（耗性能 + 人/枪同步易失败）
 
@@ -229,9 +229,9 @@ As ABP_FPSPlayer（上链缓存的人物动画蓝图引用，直接拖出来用�
         → BP_FPS_Player → Arm → Get Anim Instance → Cast ABP_FPSPlayer) → SET 缓存   ← 只一次
       Event BlueprintUpdateAnimation     → 读缓存的人物 ABP 引用 → 4×SET              ← 每帧，零 Cast
 </code></pre>
-<h3>ABP_VIRTUL 的 AnimGraph</h3>
+<h3>ABP_Virtus 的 AnimGraph</h3>
 <p>同 <code>ABP_FPSPlayer</code>（状态机 + 混合空间），注意连线，否则会出现动画不生效的问题：</p>
-<p><a class="img-link" href="assets/img/l10-abp-virtul-animgraph.png" target="_blank" rel="noopener"><img src="assets/img/l10-abp-virtul-animgraph.png" alt="ABP_VIRTUL AnimGraph" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l10-abp-virtus-animgraph.png" target="_blank" rel="noopener"><img src="assets/img/l10-abp-virtus-animgraph.png" alt="ABP_Virtus AnimGraph" loading="lazy"></a></p>
 <hr>
 <h2>六、附：Cast To 概念补充</h2>
 <h3>Cast To 是什么意思</h3>

@@ -1,7 +1,7 @@
 # 站点构建进度（供中断后接手）
 
 > 本文件记录 UE5 FPS 学习笔记静态站的构建进度与关键决策。随时更新。
-> 最新更新：骨架搭建前（内容映射已确定）。
+> 最新更新：2026-08-09 三次更新（蓝图创建步骤补全 + ABP_Virtus 命名统一）。
 
 ## 目标
 
@@ -20,7 +20,7 @@
 
 ## 关键事实（勿编错）
 
-- 命名：`ABP_FPSPlayer`=人物动画蓝图（权威数据源）；`ABP_VIRTUL`=枪械动画蓝图（引用人物的变量）；`BP_VIRTUS`=枪蓝图（运行时挂在角色上）；`BP_FPS_Player`=角色蓝图，`Arm`=其下手臂骨骼网格体变量。Virtus 是枪名。
+- 命名：`ABP_FPSPlayer`=人物动画蓝图（权威数据源）；`ABP_Virtus`=枪械动画蓝图（引用人物的变量）；`BP_VIRTUS`=枪蓝图（运行时挂在角色上）；`BP_FPS_Player`=角色蓝图，`Arm`=其下手臂骨骼网格体变量。Virtus 是枪名。
 - `Arm Socket Location Return` == `AimSocketLocationReturn`（UE 自动加大空格显示）。
 - Local/Component To Local 是引擎连线时自动插入的胶水节点，非手工摆放。
 - Cast 链放 `Event BlueprintInitializeAnimation`（一次），Update 每帧只读缓存。
@@ -56,6 +56,13 @@
 - 重构 lesson-07-09：去掉上/中/下分节与双套编号，改为「整体结构 → 混合空间 → EventGraph → 挂载 → 状态机骨架 → 各状态内部 → 转换规则」单主线
 - 新增 7 个附录页：通用节点速查 / 踩坑速查 / 数据流全景 / SOP 清单 / 术语对照 / 工具链与环境 / 设计原则
 - 记忆沉淀：全局记忆 `C:\Users\Administrator\.codeium\windsurf\memories\global_rules.md` + 项目根 `AGENTS.md`
+
+## 2026-08-09 三次更新
+
+- 命名统一：`ABP_VIRTUL`/`BS_VIRTUL` → `ABP_Virtus`/`BS_Virtus`（工程实际资产名，用户确认）；4 张 l10 截图同步改名；`docs/build/fix-virtus-naming.mjs` 是当时的批量替换脚本
+- 补蓝图创建步骤：03 课开头加「创建 BP_FPS_Player」（父类=角色 Character，位置 `Scripts/Players`）；07-09 课开头加「创建动画蓝图与混合空间」（位置 `Scripts/Players/Animation/{Players,Weapon}`）
+- 修正资产位置：GameMode 在 `Scripts/Players/System`，输入资产在 `Scripts/Players/System/Input`（均与工程 .uasset 路径核对过）
+- 骨骼选择已用二进制校验（`docs/build/check-skeletons.mjs`）：人物侧=`Skeleton_Base`，枪械侧=`MCX-VIRTUS_Skeleton`；术语表补「命名前缀」和 Skeleton vs Skeletal Mesh 区分
 
 ## 待办（全部完成 ✅）
 

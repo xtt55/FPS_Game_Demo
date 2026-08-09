@@ -20,14 +20,14 @@ ABP_FPSPlayer（人物动画蓝图）★ 权威数据源
    │
    ├─ AnimGraph：Basic 状态机（Move/Run/Aim/ToAim/ToIdle）→ 手臂动画
    │
-   └─◄ ABP_VIRTUL（枪械动画蓝图）从这里读变量
+   └─◄ ABP_Virtus（枪械动画蓝图）从这里读变量
         （Initialize 一次性缓存人物 ABP 引用，Update 每帧复用，零 Cast）
         → 枪械自己的 AnimGraph → 枪械动画
 ```
 
 **关键规则**：
 
-- `BP_FPS_Player` 是数据的**生产者**；`ABP_FPSPlayer` 是动画侧的**权威数据源**；`ABP_VIRTUL` 是**复用者**——它不直接 Cast 角色，只读人物 ABP 已同步好的变量。
+- `BP_FPS_Player` 是数据的**生产者**；`ABP_FPSPlayer` 是动画侧的**权威数据源**；`ABP_Virtus` 是**复用者**——它不直接 Cast 角色，只读人物 ABP 已同步好的变量。
 - 方向是单向的：角色 → 人物 ABP → 枪械 ABP。**不要反向，也不要让枪械 ABP 直接读角色**（会同步失败/卡顿，见[第10课](lesson-10.html)）。
 
 ## 二、瞄准数据链（第 11 课）
@@ -75,8 +75,8 @@ BP_FPS_GameMode ──指定默认 Pawn──► BP_FPS_Player
 BP_WeaponBase ◄──继承── BP_VIRTUS（SK_MCX-VIRTUS + 配件 + AimSocket）
                                       │ 动画类
                                       ▼
-ABP_FPSPlayer（手臂）        ABP_VIRTUL（枪械，读人物 ABP 变量）
+ABP_FPSPlayer（手臂）        ABP_Virtus（枪械，读人物 ABP 变量）
    │ 使用                        │ 使用
    ▼                            ▼
-BS_FPSPlayer（人物混合空间）   BS_VIRTUL（枪械混合空间，参数与人物一致）
+BS_FPSPlayer（人物混合空间）   BS_Virtus（枪械混合空间，参数与人物一致）
 ```

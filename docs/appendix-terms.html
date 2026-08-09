@@ -39,6 +39,47 @@
 <p>UE 编辑器中文本地化有些翻译<strong>不准确甚至误导</strong>，看英文教程/文档时也容易对不上。
 本页收集中英对照 + 实际含义，踩过翻译坑的条目加 ⚠️。</p>
 </blockquote>
+<h2>本项目的命名前缀</h2>
+<p>资产名第一个前缀就告诉你它是什么类型（UE 社区通用约定）：</p>
+<table>
+<thead>
+<tr>
+<th align="left">前缀</th>
+<th align="left">类型</th>
+<th align="left">本项目例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>BP_</code></td>
+<td align="left">蓝图（Blueprint）：有组件树、事件图表、函数</td>
+<td align="left"><code>BP_FPS_Player</code>、<code>BP_VIRTUS</code></td>
+</tr>
+<tr>
+<td align="left"><code>ABP_</code></td>
+<td align="left">动画蓝图（Animation Blueprint）：里面是事件图表（Event Graph）+ 动画图表（AnimGraph）</td>
+<td align="left"><code>ABP_FPSPlayer</code>、<code>ABP_Virtus</code></td>
+</tr>
+<tr>
+<td align="left"><code>BS_</code></td>
+<td align="left">混合空间（Blend Space）</td>
+<td align="left"><code>BS_FPSPlayer</code>、<code>BS_Virtus</code></td>
+</tr>
+<tr>
+<td align="left"><code>IA_</code> / <code>IMC_</code></td>
+<td align="left">输入操作 / 输入映射上下文</td>
+<td align="left"><code>IA_Move</code>、<code>IMC_FPS_Input</code></td>
+</tr>
+<tr>
+<td align="left"><code>E_</code></td>
+<td align="left">枚举（Enumeration）</td>
+<td align="left"><code>E_PlayerState</code></td>
+</tr>
+<tr>
+<td align="left"><code>SK_</code></td>
+<td align="left">骨骼网格体（Skeletal Mesh，素材包资产）</td>
+<td align="left"><code>SK_MCX-VIRTUS</code></td>
+</tr>
+</tbody></table>
 <h2>⚠️ 踩过坑的翻译</h2>
 <table>
 <thead>
@@ -152,6 +193,16 @@
 <td align="left">Anim Instance</td>
 <td align="left">动画实例</td>
 <td align="left">骨骼网格体上正在跑的动画蓝图实例</td>
+</tr>
+<tr>
+<td align="left">Skeleton</td>
+<td align="left">骨骼</td>
+<td align="left">骨架数据资产（如 <code>Skeleton_Base</code>、<code>MCX-VIRTUS_Skeleton</code>）；<strong>创建动画蓝图/混合空间时选的是它</strong></td>
+</tr>
+<tr>
+<td align="left">Skeletal Mesh</td>
+<td align="left">骨骼网格体</td>
+<td align="left">带模型的网格体（Arm / Gun / Weapon），绑定到某一副骨骼；别和 Skeleton 混淆</td>
 </tr>
 <tr>
 <td align="left">Socket</td>

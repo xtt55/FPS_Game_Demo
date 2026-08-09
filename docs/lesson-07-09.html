@@ -37,8 +37,47 @@
     <a class="video-link" href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=8" target="_blank" rel="noopener">▶ 对应视频（P8）</a>
     <blockquote>
 <p>对应视频：<a href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=8">P8</a>、<a href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=9">P9</a>、<a href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=10">P10</a>（动画系统三节课合并整理为一套完整流程）。</p>
-<p>涉及资产：<code>ABP_FPSPlayer</code>（人物动画蓝图）/ <code>BS_FPSPlayer</code>（人物混合空间）、<code>ABP_VIRTUL</code>（枪械动画蓝图）/ <code>BS_VIRTUL</code>（枪械混合空间）。</p>
+<p>涉及资产：<code>ABP_FPSPlayer</code>（人物动画蓝图）/ <code>BS_FPSPlayer</code>（人物混合空间）、<code>ABP_Virtus</code>（枪械动画蓝图）/ <code>BS_Virtus</code>（枪械混合空间）。</p>
 </blockquote>
+<h2>〇、创建动画蓝图与混合空间（第 07 课开头）</h2>
+<p>位置：<code>Scripts/Players/Animation/</code>，分两侧各建**动画蓝图（ABP）<strong>和</strong>混合空间（BS）**两样资产：</p>
+<table>
+<thead>
+<tr>
+<th align="left">侧</th>
+<th align="left">文件夹</th>
+<th align="left">动画蓝图 ABP</th>
+<th align="left">混合空间 BS</th>
+<th align="left">骨骼（Skeleton）选哪个</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">人物（手臂）</td>
+<td align="left"><code>Animation/Players/</code></td>
+<td align="left"><code>ABP_FPSPlayer</code></td>
+<td align="left"><code>BS_FPSPlayer</code></td>
+<td align="left"><strong><code>Skeleton_Base</code></strong>（在 XL_FPSPack/Player/Rig）</td>
+</tr>
+<tr>
+<td align="left">枪械</td>
+<td align="left"><code>Animation/Weapon/</code></td>
+<td align="left"><code>ABP_Virtus</code></td>
+<td align="left"><code>BS_Virtus</code></td>
+<td align="left"><strong><code>MCX-VIRTUS_Skeleton</code></strong>（在 XL_FPSPack/Weapons/MCX-VIRTUS）</td>
+</tr>
+</tbody></table>
+<p>创建方式：内容浏览器对应文件夹右键 → <strong>动画</strong> → 选「动画蓝图」或「混合空间」，**骨骼（Skeleton）**按上表选择，命名后打开。</p>
+<blockquote>
+<p>注意：创建动画蓝图 / 混合空间时引擎要求选的是<strong>骨骼（Skeleton）</strong>，不是骨骼网格体（Skeletal Mesh）。骨骼是骨架数据资产，骨骼网格体才是带模型的 Arm / Gun，两者别混淆。</p>
+</blockquote>
+<ul>
+<li><strong>动画蓝图 ABP</strong>：Event Graph 每帧同步角色变量 + AnimGraph 用状态机算姿势（本课两个图都会用到）</li>
+<li><strong>混合空间 BS</strong>：按 Move X / Y 在多个动画之间二维混合的资产（本课第二节细讲）</li>
+</ul>
+<blockquote>
+<p>命名备注：枪械侧是 <strong><code>ABP_Virtus</code> / <code>BS_Virtus</code></strong>（与工程一致，Virtus 是枪名）。旧笔记里写的 <code>ABP_VIRTUL</code> 是笔误，已统一。</p>
+</blockquote>
+<hr>
 <h2>一、整体结构（先看全貌）</h2>
 <p>动画系统分两侧，每侧一条链路：</p>
 <pre><code>BP_FPS_Player（角色蓝图）
@@ -73,12 +112,12 @@ Entry ──► Move ──► ToAim ──► Aim    │
 <p>关联动画，共五个采样点：中心 (0,0) 放 <strong>Idle</strong>，四边放前后左右行走动画。按住 Ctrl 可在面板上预览。</p>
 <p><a class="img-link" href="assets/img/l07-bs-player-anims-1.png" target="_blank" rel="noopener"><img src="assets/img/l07-bs-player-anims-1.png" alt="关联动画 1" loading="lazy"></a></p>
 <p><a class="img-link" href="assets/img/l07-bs-player-anims-2.png" target="_blank" rel="noopener"><img src="assets/img/l07-bs-player-anims-2.png" alt="关联动画 2" loading="lazy"></a></p>
-<h3>2. BS_VIRTUL（枪械）</h3>
-<p><a class="img-link" href="assets/img/l07-bs-virtus-overview.png" target="_blank" rel="noopener"><img src="assets/img/l07-bs-virtus-overview.png" alt="BS_VIRTUL" loading="lazy"></a></p>
+<h3>2. BS_Virtus（枪械）</h3>
+<p><a class="img-link" href="assets/img/l07-bs-virtus-overview.png" target="_blank" rel="noopener"><img src="assets/img/l07-bs-virtus-overview.png" alt="BS_Virtus" loading="lazy"></a></p>
 <p>坐标设置与人物一致。<strong>注意：平滑时间和平滑类型要和人物保持一致，否则可能出现穿模</strong>。</p>
-<p><a class="img-link" href="assets/img/l07-bs-virtus-axes.png" target="_blank" rel="noopener"><img src="assets/img/l07-bs-virtus-axes.png" alt="BS_VIRTUL 坐标设置" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l07-bs-virtus-axes.png" target="_blank" rel="noopener"><img src="assets/img/l07-bs-virtus-axes.png" alt="BS_Virtus 坐标设置" loading="lazy"></a></p>
 <p>关联枪械自己的动画：</p>
-<p><a class="img-link" href="assets/img/l07-bs-virtus-anims.png" target="_blank" rel="noopener"><img src="assets/img/l07-bs-virtus-anims.png" alt="BS_VIRTUL 关联动画" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l07-bs-virtus-anims.png" target="_blank" rel="noopener"><img src="assets/img/l07-bs-virtus-anims.png" alt="BS_Virtus 关联动画" loading="lazy"></a></p>
 <hr>
 <h2>三、Event Graph：同步角色变量</h2>
 <h3>作用</h3>
@@ -122,7 +161,7 @@ Entry ──► Move ──► ToAim ──► Aim    │
 <blockquote>
 <p><strong>易错</strong>：Cast 节点的<strong>执行针一定要接上</strong>。漏接时 AnimBP 里轴一直是 0，看起来「前后左右没动画」。</p>
 </blockquote>
-<h3>枪械侧 ABP_VIRTUL</h3>
+<h3>枪械侧 ABP_Virtus</h3>
 <p>与人物同理，可以直接从 <code>ABP_FPSPlayer</code> 拷贝节点。注意：拷贝的话变量不会自动创建，对引脚右键「创建变量」。</p>
 <blockquote>
 <p>第 10 课会把枪械 ABP 重构成「初始化时缓存人物 ABP 引用、每帧直接复用人物变量」，见<a href="lesson-10.html">第10课</a>。</p>
@@ -135,7 +174,7 @@ Entry ──► Move ──► ToAim ──► Aim    │
 <li>动画类 → <code>ABP_FPSPlayer</code></li>
 </ul>
 <p><a class="img-link" href="assets/img/l07-arm-anim-class.png" target="_blank" rel="noopener"><img src="assets/img/l07-arm-anim-class.png" alt="Arm 动画类" loading="lazy"></a></p>
-<p><strong>Gun</strong>（枪主体骨骼网格，不是枪管/弹匣等静态网格）同理挂 <code>ABP_VIRTUL</code>。枪管/弹匣是静模，不要给它们挂动画蓝图。</p>
+<p><strong>Gun</strong>（枪主体骨骼网格，不是枪管/弹匣等静态网格）同理挂 <code>ABP_Virtus</code>。枪管/弹匣是静模，不要给它们挂动画蓝图。</p>
 <hr>
 <h2>五、状态机骨架：Move 态</h2>
 <p><strong>State Machine 节点</strong>（命名为 Basic）：一个「动画状态机」容器，内部放多个状态 + 转换规则，对外输出最终 Pose。<strong>Output Pose</strong> 是 AnimGraph 的最终出口，连进去的 Pose 就是角色实际播放的动画。</p>
@@ -352,7 +391,7 @@ Output Animation Pose → 屏幕上的角色
 <p><a class="img-link" href="assets/img/l09-transition-aim-to-move.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-aim-to-move.png" alt="Aim→Move（简版）" loading="lazy"></a></p>
 <hr>
 <h2>八、枪械侧同步做一套</h2>
-<p>枪械 <code>ABP_VIRTUL</code> 的状态机与人物完全一致：同样的 5 个状态、同样的转换条件、Weapon 系列动画（Sprint / ADS 等）、同样的循环勾选。<strong>两边都要改完再狂按瞄准验证</strong>——只做手臂、漏枪，或两边平滑时间/过渡时长不一致，都会穿模。</p>
+<p>枪械 <code>ABP_Virtus</code> 的状态机与人物完全一致：同样的 5 个状态、同样的转换条件、Weapon 系列动画（Sprint / ADS 等）、同样的循环勾选。<strong>两边都要改完再狂按瞄准验证</strong>——只做手臂、漏枪，或两边平滑时间/过渡时长不一致，都会穿模。</p>
 <blockquote>
 <p>进阶：若切跑/停跑太「硬」，可在状态机里框选两条过渡，Details → 混合设置调<strong>混合时长</strong>（课例 0.3 秒）；手臂与枪要用同一套时长和曲线。</p>
 </blockquote>

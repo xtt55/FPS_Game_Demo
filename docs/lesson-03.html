@@ -43,9 +43,17 @@
 <strong>本课不写移动逻辑</strong>——配完后按键没反应是正常的。</li>
 </ol>
 <hr>
+<h2>〇、先创建角色蓝图 BP_FPS_Player</h2>
+<blockquote>
+<p>GameMode 要指定「默认用哪个角色」，所以先有角色蓝图，再建 GameMode。</p>
+</blockquote>
+<p>位置：<code>Scripts/Players</code>（第 01 课建的文件夹，角色相关蓝图都放这里）。</p>
+<p>新建蓝图类 → 父类选<strong>角色（Character）</strong> → 命名 <code>BP_FPS_Player</code>，编译保存。</p>
+<p>本课只把它建出来并让 GameMode 认识它；移动 / 视角 / 状态逻辑从第 04 课开始在里面写。</p>
+<hr>
 <h2>一、GameMode：指定用哪个角色</h2>
 <h3>1. 创建 BP_FPS_GameMode</h3>
-<p>位置：<code>Scripts/System</code>。</p>
+<p>位置：<code>Scripts/Players/System</code>（和角色蓝图同级的 System 文件夹，输入资产旁边）。</p>
 <p>新建蓝图类 → 父类选<strong>游戏模式基础（Game Mode Base）</strong>，命名 <code>BP_FPS_GameMode</code>（加 FPS 前缀，避免和引擎自带 GameMode 搞混）。</p>
 <p>打开 <code>BP_FPS_GameMode</code>，右侧类设置里把**默认 Pawn 类（Default Pawn Class）**改为 <code>BP_FPS_Player</code>，编译保存。</p>
 <p><a class="img-link" href="assets/img/l03-gamemode-default-pawn.png" target="_blank" rel="noopener"><img src="assets/img/l03-gamemode-default-pawn.png" alt="GameMode 默认 Pawn 类" loading="lazy"></a></p>
@@ -78,7 +86,7 @@
 <p>设好后运行：按键/鼠标都没反应 → 说明已切到自定义模式（还没写输入逻辑，<strong>没反应是正常的</strong>）。</p>
 <hr>
 <h2>二、Enhanced Input 资产</h2>
-<p>位置：<code>Scripts/Input</code>（之后所有输入资产放这里）。</p>
+<p>位置：<code>Scripts/Players/System/Input</code>（之后所有输入资产放这里）。</p>
 <h3>1. 四个输入操作（IA）</h3>
 <table>
 <thead>

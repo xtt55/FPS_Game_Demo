@@ -3,7 +3,7 @@
 ## 这份笔记的特点
 
 - **按课程章节线性组织**：每一课一页，照着顺序就能从头回忆整个工程是怎么一步步搭起来的。
-- **以我自己的工程为准**：蓝图命名、节点连接、截图全部来自我自己的工程（如 `BP_FPS_Player`、`ABP_FPSPlayer`、`ABP_VIRTUL`）。
+- **以我自己的工程为准**：蓝图命名、节点连接、截图全部来自我自己的工程（如 `BP_FPS_Player`、`ABP_FPSPlayer`、`ABP_Virtus`）。
 - **节点级讲解**：每张蓝图都解释节点和引脚的作用、数据流向，而不只是"点这里"。
 
 ## 章节
@@ -41,7 +41,7 @@
 | `IMC_FPS_Input` + `IA_*` | 增强输入 | 移动 / 视角 / 跑步 / 瞄准的输入映射 |
 | `E_PlayerState` | 枚举 | Idle / Walk / Run / Aim 四种角色状态 |
 | `ABP_FPSPlayer` | 动画蓝图（人物） | **权威数据源**，驱动手臂动画 |
-| `ABP_VIRTUL` | 动画蓝图（枪械） | 复用 ABP_FPSPlayer 的变量，驱动枪械动画 |
-| `BS_FPSPlayer` / `BS_VIRTUL` | 混合空间 | 八方向移动动画混合（人物 / 枪械） |
+| `ABP_Virtus` | 动画蓝图（枪械） | 复用 ABP_FPSPlayer 的变量，驱动枪械动画 |
+| `BS_FPSPlayer` / `BS_Virtus` | 混合空间 | 八方向移动动画混合（人物 / 枪械） |
 | `BP_WeaponBase` | 蓝图类（Actor） | 枪械基类，保存枪械共有属性 |
 | `BP_VIRTUS` | 蓝图类（继承 WeaponBase） | 具体枪械（Virtus，类似 AK47） |

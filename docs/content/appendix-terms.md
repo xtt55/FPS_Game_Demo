@@ -1,6 +1,19 @@
 > UE 编辑器中文本地化有些翻译**不准确甚至误导**，看英文教程/文档时也容易对不上。
 > 本页收集中英对照 + 实际含义，踩过翻译坑的条目加 ⚠️。
 
+## 本项目的命名前缀
+
+资产名第一个前缀就告诉你它是什么类型（UE 社区通用约定）：
+
+| 前缀 | 类型 | 本项目例子 |
+|:---|:---|:---|
+| `BP_` | 蓝图（Blueprint）：有组件树、事件图表、函数 | `BP_FPS_Player`、`BP_VIRTUS` |
+| `ABP_` | 动画蓝图（Animation Blueprint）：里面是事件图表（Event Graph）+ 动画图表（AnimGraph） | `ABP_FPSPlayer`、`ABP_Virtus` |
+| `BS_` | 混合空间（Blend Space） | `BS_FPSPlayer`、`BS_Virtus` |
+| `IA_` / `IMC_` | 输入操作 / 输入映射上下文 | `IA_Move`、`IMC_FPS_Input` |
+| `E_` | 枚举（Enumeration） | `E_PlayerState` |
+| `SK_` | 骨骼网格体（Skeletal Mesh，素材包资产） | `SK_MCX-VIRTUS` |
+
 ## ⚠️ 踩过坑的翻译
 
 | 英文 | 编辑器中文 | 实际含义 |
@@ -32,6 +45,8 @@
 | Cast To | 类型转换 | 父类引用 → 子类，解锁子类成员；有 Cast Failed 分支 |
 | Owner / Owning Actor | 拥有者 | 生成时指定的归属对象 / 组件所属的 Actor |
 | Anim Instance | 动画实例 | 骨骼网格体上正在跑的动画蓝图实例 |
+| Skeleton | 骨骼 | 骨架数据资产（如 `Skeleton_Base`、`MCX-VIRTUS_Skeleton`）；**创建动画蓝图/混合空间时选的是它** |
+| Skeletal Mesh | 骨骼网格体 | 带模型的网格体（Arm / Gun / Weapon），绑定到某一副骨骼；别和 Skeleton 混淆 |
 | Socket | 插槽 | 骨骼上的挂点（配件、瞄准定位用），来自骨骼资产本身 |
 
 ## 动画

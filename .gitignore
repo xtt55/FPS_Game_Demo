@@ -7,6 +7,9 @@ Saved/
 Platforms/*/Binaries/
 Platforms/*/Build/
 
+# 上面的 Build/ 在 Windows（core.ignorecase=true）下会误伤 docs/build/（笔记站构建脚本），这里排除
+!/docs/build/
+
 # 编辑器 / IDE
 .vs/
 .vscode/
