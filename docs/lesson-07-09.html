@@ -24,7 +24,13 @@
 <a class="nav-link active" href="lesson-07-09.html">07-09 制作动画系统</a>
 <a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
 <a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
-<a class="nav-link" href="appendix-nodes.html">附录 · 通用节点速查</a>
+<a class="nav-link" href="appendix-nodes.html">附录一 · 通用节点速查</a>
+<a class="nav-link" href="appendix-troubleshooting.html">附录二 · 踩坑速查</a>
+<a class="nav-link" href="appendix-architecture.html">附录三 · 数据流全景</a>
+<a class="nav-link" href="appendix-sop.html">附录四 · SOP 清单</a>
+<a class="nav-link" href="appendix-terms.html">附录五 · 术语对照</a>
+<a class="nav-link" href="appendix-workflow.html">附录六 · 工具链与环境</a>
+<a class="nav-link" href="appendix-principles.html">附录七 · 设计原则</a>
   </nav>
   <main class="content">
     <h1 class="page-title">第07–09课 · 制作动画系统（上/中/下）</h1>
@@ -36,7 +42,7 @@
 <h2>一、整体结构（先看全貌）</h2>
 <p>动画系统分两侧，每侧一条链路：</p>
 <pre><code>BP_FPS_Player（角色蓝图）
-  │  Event Graph 每帧同步变量（Move X / Move Y / E Player State / Character Movement）
+  │  Event Graph 每帧同步变量（Move X / Move Y / E_PlayerState / Character Movement）
   ▼
 ABP_FPSPlayer（动画蓝图）
   │  AnimGraph：状态机算姿势
@@ -54,7 +60,7 @@ Entry ──► Move ──► ToAim ──► Aim    │
 <ul>
 <li><strong>Move</strong>：播混合空间（八方向行走 + Idle）</li>
 <li><strong>Run</strong>：播 Sprint 序列</li>
-<li><strong>Aim</strong>：按实际速度在 ADS Idle / ADS Walk 之间混合</li>
+<li><strong>Aim</strong>：按实际速度在 ADS Idle / ADS Walk 之间混合（<strong>ADS</strong> = Aim Down Sights，瞄准/开镜状态，动画资产名里的 <code>ADS_Idle</code>、<code>ADS_Walk</code> 就是瞄准时的待机和行走）</li>
 <li><strong>ToAim / ToIdle</strong>：进瞄 / 出瞄的过渡动画状态</li>
 </ul>
 <p>动画资产位置：</p>
@@ -99,8 +105,8 @@ Entry ──► Move ──► ToAim ──► Aim    │
 <td align="left">把通用 Pawn 安全地转成自定义角色类型。Object 脚接 Try Get Pawn Owner 的返回值；输出 As BP FPS Player（深蓝线）+ Cast Failed（白线，没接，可接 Print String 调试）。只有转换成功后，才能读角色的自定义变量</td>
 </tr>
 <tr>
-<td align="left"><strong>四个变量 Getter</strong>（Move X / Move Y / E Player State / Character Movement）</td>
-<td align="left">从 As BP FPS Player 身上读：Move X（绿线，前后移动输入）、Move Y（绿线，左右移动输入）、E Player State（枚举线）、Character Movement（角色移动组件）。这四个小节点左边有 Target 脚，被蓝线连到 As BP FPS Player</td>
+<td align="left"><strong>四个变量 Getter</strong>（Move X / Move Y / E_PlayerState / Character Movement）</td>
+<td align="left">从 As BP FPS Player 身上读：Move X（绿线，前后移动输入）、Move Y（绿线，左右移动输入）、E_PlayerState（枚举线）、Character Movement（角色移动组件）。这四个小节点左边有 Target 脚，被蓝线连到 As BP FPS Player</td>
 </tr>
 <tr>
 <td align="left"><strong>四个 SET 节点</strong></td>
@@ -109,7 +115,7 @@ Entry ──► Move ──► ToAim ──► Aim    │
 </tbody></table>
 <h3>工作流</h3>
 <pre><code>每帧更新动画 → 拿到当前控制的 Pawn → 确认它是 BP_FPS_Player
-  → 把 Move X、Move Y、E Player State、Character Movement
+  → 把 Move X、Move Y、E_PlayerState、Character Movement
   → 复制到动画蓝图自己的同名变量里
 </code></pre>
 <p>这样动画蓝图就知道：玩家有没有移动、移动方向、当前状态（Idle/Walk/Run/Aim），从而播对应的动画。</p>
@@ -151,11 +157,11 @@ Entry ──► Move ──► ToAim ──► Aim    │
 <p>接完在 Move 节点内部点击编译：</p>
 <p><a class="img-link" href="assets/img/l07-move-state-compile.png" target="_blank" rel="noopener"><img src="assets/img/l07-move-state-compile.png" alt="编译" loading="lazy"></a></p>
 <h3>2. Run 态：播 Sprint 序列</h3>
-<p>进入 Run 状态，资产浏览器搜 <strong><code>sprint</code></strong>（不要搜 <code>run</code>——序列名是 Sprint），拉出动画接输出姿势。<strong>勾选循环播放</strong>，最后点击编译。</p>
+<p>进入 Run 状态，资产浏览器搜 <strong><code>sprint</code></strong>——跑步动画的序列名里是 <strong>Sprint</strong> 不是 Run，搜 <code>run</code> 找不到（搜索不区分大小写）。拉出动画接输出姿势，<strong>勾选循环播放</strong>，最后点击编译。</p>
 <p><a class="img-link" href="assets/img/l08-run-state-animation.png" target="_blank" rel="noopener"><img src="assets/img/l08-run-state-animation.png" alt="Run 节点动画" loading="lazy"></a></p>
 <h3>3. Aim 态：按速度混合 ADS Idle / ADS Walk</h3>
 <p><a class="img-link" href="assets/img/l09-aim-state-config.png" target="_blank" rel="noopener"><img src="assets/img/l09-aim-state-config.png" alt="Aim 节点配置" loading="lazy"></a></p>
-<p>Aim 状态内部不播「一个」动画，而是<strong>根据角色实际移动速度，在 Idle（稳瞄）和 Walk（走瞄）之间平滑切换</strong>。这里用 <strong>Blend Poses by Bone（按骨骼混合）</strong> 节点做过渡，不会生硬跳切。</p>
+<p>Aim 状态内部不播「一个」动画，而是<strong>根据角色实际移动速度，在 Idle（稳瞄）和 Walk（走瞄）之间平滑切换</strong>。这里用 <strong>Blend Poses by bool（按布尔混合姿势）</strong> 节点做过渡，不会生硬跳切。</p>
 <h4>节点逐个解释（数据流从底到顶）</h4>
 <table>
 <thead>
@@ -169,20 +175,20 @@ Entry ──► Move ──► ToAim ──► Aim    │
 <td align="left">从「我的变量」面板拖出的移动组件对象引用，后续从它身上取速度</td>
 </tr>
 <tr>
-<td align="left"><strong>Velocity</strong>（深蓝针脚）</td>
-<td align="left">从组件读当前帧的<strong>速度向量（Vector）</strong>。Target 脚接 Character Movement；输出一根蓝色细线，代表 (X, Y, Z) 三轴速度</td>
+<td align="left"><strong>Velocity</strong></td>
+<td align="left">从组件读当前帧的<strong>速度向量（Vector）</strong>。Target 脚接 Character Movement；输出一根<strong>黄色</strong>细线（UE5 里 Vector 是黄色），代表 (X, Y, Z) 三轴速度</td>
 </tr>
 <tr>
 <td align="left"><strong>Vector Length</strong>（绿色纯函数）</td>
-<td align="left">把蓝色速度向量变成绿色标量 float（模长，忽略方向）。站着不动 ≈ 0；走路 ≈ 200~400；跑步 ≈ 600+。无白色执行线 = 纯函数</td>
+<td align="left">把黄色速度向量变成绿色标量 float（模长，忽略方向）。站着不动 ≈ 0；走路 ≈ 200~400；跑步 ≈ 600+。无白色执行线 = 纯函数</td>
 </tr>
 <tr>
 <td align="left"><strong><code>&gt; 0.0</code> 比较</strong></td>
 <td align="left">判断「速度是否 &gt; 0」（在移动为 true），输出红色布尔线</td>
 </tr>
 <tr>
-<td align="left"><strong>Blend Poses by Bone</strong>（核心混合节点）</td>
-<td align="left">True Pose 接 Walk（在动时播）、False Pose 接 Idle（静止时播）、True/False Blend Time 各 <strong>0.1 秒</strong>、Active Value 接「速度 &gt; 0」的布尔。「by Bone」表示可指定某些骨骼用不同权重混合（默认全骨骼统一），高级用法可做「上身瞄准、下身走路」分层</td>
+<td align="left"><strong>Blend Poses by bool</strong>（核心混合节点）</td>
+<td align="left">按一个布尔值在两个姿势间切换并平滑过渡。<code>True Pose</code> 接 ADS_Walk（在动时播）、<code>False Pose</code> 接 ADS_Idle（静止时播）、<code>True/False Blend Time</code> 各 <strong>0.1 秒</strong>（切过去/切回来的过渡时长）、<code>Active Value</code>（红色布尔输入）接「速度 &gt; 0」的判断结果</td>
 </tr>
 <tr>
 <td align="left"><strong>两个 Animation Player</strong>（ADS Walk / ADS Idle）</td>
@@ -195,14 +201,14 @@ Entry ──► Move ──► ToAim ──► Aim    │
 </tbody></table>
 <h4>数据流全景</h4>
 <pre><code>Character Movement (组件)
-    ↓ (深蓝对象线)
+    ↓ (蓝色对象线)
 Velocity (取速度向量)
-    ↓ (蓝色向量线)
+    ↓ (黄色向量线)
 Vector Length (向量 → 标量)
     ↓ (绿色 float 线)
 [&gt; 0.0] 比较
     ↓ (红色 bool 线)
-Blend Poses by Bone.Active Value
+Blend Poses by bool.Active Value
     ├─ True  → Walk 动画 → True Pose
     └─ False → Idle 动画 → False Pose
     ↓ (混合后的姿势)
@@ -219,8 +225,8 @@ Output Animation Pose → 屏幕上的角色
 </thead>
 <tbody><tr>
 <td align="left"><strong>Event Graph</strong>（第 06 课）</td>
-<td align="left">每帧算 <code>E Player State</code> 枚举</td>
-<td align="left"><strong>输入意图</strong>（玩家是否按键：Move X/Y + Want to Run/Aim）</td>
+<td align="left">每帧算 <code>E_PlayerState</code> 枚举</td>
+<td align="left"><strong>输入意图</strong>（玩家是否按键：Move X/Y + Want To Run/Aim）</td>
 </tr>
 <tr>
 <td align="left"><strong>AnimGraph</strong>（本图）</td>
@@ -256,17 +262,17 @@ Output Animation Pose → 屏幕上的角色
 </thead>
 <tbody><tr>
 <td align="left">Move → Run</td>
-<td align="left"><code>E Player State</code> <strong>== Run</strong></td>
+<td align="left"><code>E_PlayerState</code> <strong>== Run</strong></td>
 <td align="left">进入跑步</td>
 </tr>
 <tr>
 <td align="left">Run → Move</td>
-<td align="left"><code>E Player State</code> <strong>!= Run</strong></td>
+<td align="left"><code>E_PlayerState</code> <strong>!= Run</strong></td>
 <td align="left">只要不是跑，就回 Move</td>
 </tr>
 <tr>
 <td align="left">Move → ToAim</td>
-<td align="left"><code>E Player State</code> <strong>== Aim</strong></td>
+<td align="left"><code>E_PlayerState</code> <strong>== Aim</strong></td>
 <td align="left">按下瞄准，开始进瞄过渡</td>
 </tr>
 <tr>
@@ -276,7 +282,7 @@ Output Animation Pose → 屏幕上的角色
 </tr>
 <tr>
 <td align="left">Aim → ToIdle</td>
-<td align="left"><code>E Player State</code> <strong>!= Aim</strong></td>
+<td align="left"><code>E_PlayerState</code> <strong>!= Aim</strong></td>
 <td align="left">松开瞄准，开始出瞄过渡</td>
 </tr>
 <tr>
@@ -286,12 +292,12 @@ Output Animation Pose → 屏幕上的角色
 </tr>
 <tr>
 <td align="left">ToAim → ToIdle</td>
-<td align="left"><code>E Player State</code> <strong>!= Aim</strong></td>
+<td align="left"><code>E_PlayerState</code> <strong>!= Aim</strong></td>
 <td align="left">打断边：进瞄中途松键，立刻往回</td>
 </tr>
 <tr>
 <td align="left">ToIdle → ToAim</td>
-<td align="left"><code>E Player State</code> <strong>== Aim</strong></td>
+<td align="left"><code>E_PlayerState</code> <strong>== Aim</strong></td>
 <td align="left">打断边：出瞄中途再按，立刻再进瞄</td>
 </tr>
 </tbody></table>
@@ -311,7 +317,7 @@ Output Animation Pose → 屏幕上的角色
 <p><a class="img-link" href="assets/img/l09-transition-toidle-toaim.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-toidle-toaim.png" alt="ToIdle→ToAim" loading="lazy"></a></p>
 <h3>详解：ToIdle → Move 为什么要 OR Run</h3>
 <p>这条边的完整逻辑：</p>
-<pre><code>允许从 ToIdle 切到 Move = (ToIdle 动画剩余时间 &lt; 0.4)  或  (E Player State == Run)
+<pre><code>允许从 ToIdle 切到 Move = (ToIdle 动画剩余时间 &lt; 0.4)  或  (E_PlayerState == Run)
 </code></pre>
 <table>
 <thead>
@@ -329,7 +335,7 @@ Output Animation Pose → 屏幕上的角色
 <td align="left">过渡动画快播完才允许切走，防止动画才播个开头就被打断</td>
 </tr>
 <tr>
-<td align="left"><strong>E Player State <code>== Run</code></strong>（枚举判断）</td>
+<td align="left"><strong>E_PlayerState <code>== Run</code></strong>（枚举判断）</td>
 <td align="left">玩家当前是否在跑</td>
 </tr>
 <tr>

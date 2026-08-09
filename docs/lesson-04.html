@@ -24,7 +24,13 @@
 <a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
 <a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
 <a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
-<a class="nav-link" href="appendix-nodes.html">附录 · 通用节点速查</a>
+<a class="nav-link" href="appendix-nodes.html">附录一 · 通用节点速查</a>
+<a class="nav-link" href="appendix-troubleshooting.html">附录二 · 踩坑速查</a>
+<a class="nav-link" href="appendix-architecture.html">附录三 · 数据流全景</a>
+<a class="nav-link" href="appendix-sop.html">附录四 · SOP 清单</a>
+<a class="nav-link" href="appendix-terms.html">附录五 · 术语对照</a>
+<a class="nav-link" href="appendix-workflow.html">附录六 · 工具链与环境</a>
+<a class="nav-link" href="appendix-principles.html">附录七 · 设计原则</a>
   </nav>
   <main class="content">
     <h1 class="page-title">第04课 · 实现角色基本能力</h1>
@@ -42,57 +48,55 @@
 <li><strong>执行线（Execution）</strong>：白色粗线，控制「先干啥后干啥」的顺序流。</li>
 <li><strong>数据线（Data）</strong>：彩色细线，把一个值传给另一个节点。</li>
 </ul>
-<p>细线颜色对照：</p>
+<p><strong>数据线颜色</strong>对照（UE5）：</p>
 <table>
 <thead>
 <tr>
 <th align="left">颜色</th>
 <th align="left">数据类型</th>
-<th align="left">本课出现的例子</th>
+<th align="left">本项目出现的例子</th>
 </tr>
 </thead>
 <tbody><tr>
 <td align="left">🔴 红</td>
 <td align="left">布尔 Boolean</td>
-<td align="left">各 Branch 的判断条件</td>
+<td align="left">Want To Run、各 Branch 的判断条件</td>
 </tr>
 <tr>
 <td align="left">🟢 绿</td>
 <td align="left">浮点 Float</td>
-<td align="left">Move X、常量 0.0</td>
-</tr>
-<tr>
-<td align="left">🔵 蓝</td>
-<td align="left">向量 Vector</td>
-<td align="left">Get Forward Vector 的输出</td>
+<td align="left">Move X、常量 0.0、Vector Length 的输出</td>
 </tr>
 <tr>
 <td align="left">🟡 黄</td>
-<td align="left">旋转器 Rotator</td>
+<td align="left"><strong>向量 Vector</strong></td>
+<td align="left">Velocity、Get Forward Vector 的输出</td>
+</tr>
+<tr>
+<td align="left">🟣 紫</td>
+<td align="left"><strong>旋转器 Rotator</strong></td>
 <td align="left">Get Control Rotation 的输出</td>
 </tr>
 <tr>
 <td align="left">🟠 橙</td>
 <td align="left">变换 Transform</td>
-<td align="left">（本课没用到）</td>
+<td align="left">SpawnActor 的 Spawn Transform</td>
 </tr>
 <tr>
-<td align="left">🟣 紫</td>
-<td align="left">函数入口/事件</td>
-<td align="left">函数定义的入口节点</td>
-</tr>
-<tr>
-<td align="left">🔵 深蓝</td>
+<td align="left">🔵 蓝</td>
 <td align="left">对象引用 Object</td>
-<td align="left">Controller、Character Movement 组件引用</td>
+<td align="left">Controller、Arm、Character Movement 组件引用</td>
 </tr>
 <tr>
-<td align="left">⚪ 自定义色</td>
+<td align="left">自定义色</td>
 <td align="left">枚举 Enum</td>
-<td align="left">E Player State 的取值</td>
+<td align="left">E_PlayerState 的取值</td>
 </tr>
 </tbody></table>
-<p>一句话记忆：<strong>红色是判断题、绿色是数字、蓝色是向量、深蓝是对象</strong>。</p>
+<p>一句话记忆：<strong>红色是判断题、绿色是数字、黄色是向量、蓝色是对象</strong>。</p>
+<blockquote>
+<p><strong>注意别混淆</strong>：上表说的是<strong>连线/引脚</strong>的颜色。<strong>节点标题栏</strong>是另一套配色——比如函数入口节点标题栏是紫色、事件节点是红色、纯函数是绿色，这跟数据类型无关。</p>
+</blockquote>
 <hr>
 <h2>一、BeginPlay：激活输入映射上下文</h2>
 <p><a class="img-link" href="assets/img/l04-beginplay-input-chain.png" target="_blank" rel="noopener"><img src="assets/img/l04-beginplay-input-chain.png" alt="BeginPlay 激活输入链" loading="lazy"></a></p>
@@ -125,7 +129,7 @@
 <td align="left">通过这个引脚关联自定义的输入系统；Mapping Context 设为 <code>IMC_FPS_Input</code></td>
 </tr>
 <tr>
-<td align="left"><strong>Spawn Weapon</strong></td>
+<td align="left"><strong>SpawnWeapon</strong></td>
 <td align="left">调用枪械生成函数（第 10 课模块化后才有，详见<a href="lesson-10.html">第10课</a>；如果用静态组件直接挂枪则不需要这一节点）</td>
 </tr>
 </tbody></table>

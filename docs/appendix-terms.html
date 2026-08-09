@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>附录五 · UE 中英术语对照 · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link" href="index.html">首页</a>
+<a class="nav-link" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
+<a class="nav-link" href="appendix-nodes.html">附录一 · 通用节点速查</a>
+<a class="nav-link" href="appendix-troubleshooting.html">附录二 · 踩坑速查</a>
+<a class="nav-link" href="appendix-architecture.html">附录三 · 数据流全景</a>
+<a class="nav-link" href="appendix-sop.html">附录四 · SOP 清单</a>
+<a class="nav-link active" href="appendix-terms.html">附录五 · 术语对照</a>
+<a class="nav-link" href="appendix-workflow.html">附录六 · 工具链与环境</a>
+<a class="nav-link" href="appendix-principles.html">附录七 · 设计原则</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">附录五 · UE 中英术语对照</h1>
+    
+    <blockquote>
+<p>UE 编辑器中文本地化有些翻译<strong>不准确甚至误导</strong>，看英文教程/文档时也容易对不上。
+本页收集中英对照 + 实际含义，踩过翻译坑的条目加 ⚠️。</p>
+</blockquote>
+<h2>⚠️ 踩过坑的翻译</h2>
+<table>
+<thead>
+<tr>
+<th align="left">英文</th>
+<th align="left">编辑器中文</th>
+<th align="left">实际含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Negate</strong></td>
+<td align="left">否定</td>
+<td align="left"><strong>取反/相反方向</strong>（不是&quot;否定这个输入&quot;）。IMC 修改器，用于 S 键、鼠标 Y</td>
+</tr>
+<tr>
+<td align="left"><strong>Swizzle Input Axis Values</strong></td>
+<td align="left">拌合输入轴值</td>
+<td align="left"><strong>交换/重排坐标轴</strong>（如 YXZ 表示换到另一根轴）。用于 A/D 键换到 X 轴</td>
+</tr>
+<tr>
+<td align="left"><strong>Velocity</strong></td>
+<td align="left">速度</td>
+<td align="left"><strong>速度向量</strong>（有方向）。判断&quot;有没有在动&quot;要用 Vector Length 取模长</td>
+</tr>
+<tr>
+<td align="left"><strong>Get Relevant Anim Time Remaining</strong></td>
+<td align="left">获取相关剩余动画时间</td>
+<td align="left">源状态动画的<strong>剩余秒数</strong>；还有同名的 Fraction（比例 0~1）版本，别选错</td>
+</tr>
+</tbody></table>
+<h2>输入系统</h2>
+<table>
+<thead>
+<tr>
+<th align="left">英文</th>
+<th align="left">中文</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Input Action (IA)</td>
+<td align="left">输入操作</td>
+<td align="left">一个动作（移动/视角/跑/瞄），有值类型（bool / Vector2D…）</td>
+</tr>
+<tr>
+<td align="left">Input Mapping Context (IMC)</td>
+<td align="left">输入映射上下文</td>
+<td align="left">一套 IA ↔ 键位的映射表</td>
+</tr>
+<tr>
+<td align="left">Modifier</td>
+<td align="left">修改器</td>
+<td align="left">挂在映射上改输入值（Negate / Swizzle…）</td>
+</tr>
+<tr>
+<td align="left">Triggered</td>
+<td align="left">触发中</td>
+<td align="left">键按住期间持续触发</td>
+</tr>
+<tr>
+<td align="left">Completed</td>
+<td align="left">已完成</td>
+<td align="left">键抬起时触发一次</td>
+</tr>
+<tr>
+<td align="left">Enhanced Input Local Player Subsystem</td>
+<td align="left">增强输入本地玩家子系统</td>
+<td align="left">增强输入的入口，Add Mapping Context 从这拿</td>
+</tr>
+</tbody></table>
+<h2>框架与对象</h2>
+<table>
+<thead>
+<tr>
+<th align="left">英文</th>
+<th align="left">中文</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Pawn</td>
+<td align="left">（棋子）</td>
+<td align="left">可被控制器操控的角色基类</td>
+</tr>
+<tr>
+<td align="left">Controller</td>
+<td align="left">控制器</td>
+<td align="left">Pawn 的&quot;大脑&quot;；PlayerController=玩家，AIController=AI</td>
+</tr>
+<tr>
+<td align="left">GameMode</td>
+<td align="left">游戏模式</td>
+<td align="left">规定用哪个 Pawn 等规则；项目设置=全局，世界场景设置=仅当前关卡</td>
+</tr>
+<tr>
+<td align="left">Default Pawn Class</td>
+<td align="left">默认 Pawn 类</td>
+<td align="left">GameMode 里指定生成哪个角色</td>
+</tr>
+<tr>
+<td align="left">Cast To</td>
+<td align="left">类型转换</td>
+<td align="left">父类引用 → 子类，解锁子类成员；有 Cast Failed 分支</td>
+</tr>
+<tr>
+<td align="left">Owner / Owning Actor</td>
+<td align="left">拥有者</td>
+<td align="left">生成时指定的归属对象 / 组件所属的 Actor</td>
+</tr>
+<tr>
+<td align="left">Anim Instance</td>
+<td align="left">动画实例</td>
+<td align="left">骨骼网格体上正在跑的动画蓝图实例</td>
+</tr>
+<tr>
+<td align="left">Socket</td>
+<td align="left">插槽</td>
+<td align="left">骨骼上的挂点（配件、瞄准定位用），来自骨骼资产本身</td>
+</tr>
+</tbody></table>
+<h2>动画</h2>
+<table>
+<thead>
+<tr>
+<th align="left">英文</th>
+<th align="left">中文</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Animation Blueprint (ABP)</td>
+<td align="left">动画蓝图</td>
+<td align="left">Event Graph 同步数据 + AnimGraph 算姿势</td>
+</tr>
+<tr>
+<td align="left">Blend Space (BS)</td>
+<td align="left">混合空间</td>
+<td align="left">按坐标轴在多段动画间混合（八方向移动）</td>
+</tr>
+<tr>
+<td align="left">State Machine</td>
+<td align="left">状态机</td>
+<td align="left">状态 + 转换规则的容器</td>
+</tr>
+<tr>
+<td align="left">Transition Rule</td>
+<td align="left">转换规则</td>
+<td align="left">状态间连线的准入条件，结果接 Can Enter Transition</td>
+</tr>
+<tr>
+<td align="left">Blend Poses by bool</td>
+<td align="left">按布尔混合姿势</td>
+<td align="left">按一个布尔在两个姿势间切换并平滑过渡（本项目 Aim 态用它）</td>
+</tr>
+<tr>
+<td align="left">Layered blend per bone</td>
+<td align="left">按骨骼分层混合</td>
+<td align="left">按骨骼分权重混合（可做上身瞄准+下身走路）；<strong>本项目未用到</strong>，别和 by bool 混淆</td>
+</tr>
+<tr>
+<td align="left">Pose</td>
+<td align="left">姿势</td>
+<td align="left">骨骼当前的位置/旋转/缩放状态；AnimGraph 里流动的就是它，终点是 Output Pose</td>
+</tr>
+<tr>
+<td align="left">PIE</td>
+<td align="left">在编辑器中运行</td>
+<td align="left">Play In Editor，点编辑器的运行按钮试玩</td>
+</tr>
+<tr>
+<td align="left">ADS</td>
+<td align="left">瞄准（开镜）</td>
+<td align="left">Aim Down Sights，动画资产名里的 ADS_Idle / ADS_Walk 就是瞄准状态的待机/行走</td>
+</tr>
+<tr>
+<td align="left">DefaultSceneRoot</td>
+<td align="left">默认场景根组件</td>
+<td align="left">新建 Actor 蓝图时自带的空根节点，可被自己加的组件拖上去覆盖</td>
+</tr>
+<tr>
+<td align="left">cached pose</td>
+<td align="left">缓存姿势</td>
+<td align="left">Save 存一次、Use 多处引用，省性能</td>
+</tr>
+<tr>
+<td align="left">Loop (Animation)</td>
+<td align="left">循环动画</td>
+<td align="left">持续动作要勾；一次性过渡（ToAim/ToIdle）千万别勾</td>
+</tr>
+<tr>
+<td align="left">Blend Time</td>
+<td align="left">混合时长</td>
+<td align="left">过渡秒数；硬插值太长会僵，可用过渡动画序列替代</td>
+</tr>
+<tr>
+<td align="left">Transform (Modify) Bone</td>
+<td align="left">变换（修改）骨骼</td>
+<td align="left">程序化改骨骼位置/旋转/缩放</td>
+</tr>
+<tr>
+<td align="left">Montage</td>
+<td align="left">蒙太奇</td>
+<td align="left">动画序列的可编程播放包装（开火/换弹用，后续课程）</td>
+</tr>
+</tbody></table>
+<h2>渲染与性能</h2>
+<table>
+<thead>
+<tr>
+<th align="left">英文</th>
+<th align="left">中文</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Derived Data Cache (DDC)</td>
+<td align="left">派生数据缓存</td>
+<td align="left">编译好的着色器/贴图缓存；放 SSD，别放 C 盘</td>
+</tr>
+<tr>
+<td align="left">Near Clip Plane</td>
+<td align="left">近剪切平面</td>
+<td align="left">摄像机最近可见距离，FPS 改 0.1，改完重启</td>
+</tr>
+<tr>
+<td align="left">Accessed None</td>
+<td align="left">读取了空对象</td>
+<td align="left">运行时错误，用 Is Valid 防护</td>
+</tr>
+<tr>
+<td align="left">World / Relative / Component / Local Space</td>
+<td align="left">世界/相对/组件/本地空间</td>
+<td align="left">坐标系选择；Modify Bone 空间必须和数据来源一致</td>
+</tr>
+</tbody></table>
+
+    
+    <div class="pager">
+      <a href="appendix-sop.html">← 附录四 · SOP 清单</a>
+      <a href="appendix-workflow.html">附录六 · 工具链与环境 →</a>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>

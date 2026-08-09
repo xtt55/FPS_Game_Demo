@@ -6,8 +6,8 @@
       ],
       "command": "C:\\nvm4w\\nodejs\\node.exe",
       "env": {
-        "NOVA_CONTEXT_SERVICE_ENDPOINT": "\\\\.\\pipe\\nova-context-19928",
-        "NOVA_CONTEXT_SERVICE_TOKEN": "52a06671-6af1-4bed-b997-43974265f6cd",
+        "NOVA_CONTEXT_SERVICE_ENDPOINT": "\\\\.\\pipe\\nova-context-8776",
+        "NOVA_CONTEXT_SERVICE_TOKEN": "45f12fcd-9d7a-4ea6-870e-d31b58bb9da6",
         "NOVA_FAST_CONTEXT": "1",
         "NOVA_TOOLS_CWD": "D:\\Unreal Projects\\FPS_Game_Demo"
       },

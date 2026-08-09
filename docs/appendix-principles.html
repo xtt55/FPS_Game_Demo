@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>附录七 · 设计原则（为什么这么写） · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link" href="index.html">首页</a>
+<a class="nav-link" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
+<a class="nav-link" href="appendix-nodes.html">附录一 · 通用节点速查</a>
+<a class="nav-link" href="appendix-troubleshooting.html">附录二 · 踩坑速查</a>
+<a class="nav-link" href="appendix-architecture.html">附录三 · 数据流全景</a>
+<a class="nav-link" href="appendix-sop.html">附录四 · SOP 清单</a>
+<a class="nav-link" href="appendix-terms.html">附录五 · 术语对照</a>
+<a class="nav-link" href="appendix-workflow.html">附录六 · 工具链与环境</a>
+<a class="nav-link active" href="appendix-principles.html">附录七 · 设计原则</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">附录七 · 设计原则（为什么这么写）</h1>
+    
+    <blockquote>
+<p>从第 01–11 课提炼的设计原则——不只是&quot;怎么连节点&quot;，而是&quot;为什么这么设计&quot;。
+以后自己写新功能时，先翻翻这几条。</p>
+</blockquote>
+<h2>1. 昂贵的操作只做一次</h2>
+<p>多层 Cast、取引用这类有开销的操作，放进<strong>只跑一次</strong>的事件（BeginPlay / InitializeAnimation），结果缓存成变量；每帧事件（Tick / UpdateAnimation）里<strong>只读写变量</strong>。</p>
+<ul>
+<li>实例：枪械 ABP 的 Cast 链从每帧 Update 挪到 Initialize，每帧零 Cast（<a href="lesson-10.html">第10课</a>）</li>
+<li>推论：在 Tick 里加任何节点前，先问自己&quot;这事需要每帧做吗&quot;</li>
+</ul>
+<h2>2. 单一权威数据源</h2>
+<p>同一份数据只由一个角色持有，其它人<strong>引用它</strong>，而不是各自重新获取。</p>
+<ul>
+<li>实例：<code>ABP_FPSPlayer</code> 是人物变量的唯一权威；枪械 <code>ABP_VIRTUL</code> 读它的变量，不自己 Cast 角色</li>
+<li>违反的代价：人枪两套变量不同步 → 动作脱节、卡顿</li>
+</ul>
+<h2>3. 输入意图 ≠ 物理结果</h2>
+<p>逻辑状态用<strong>输入意图</strong>（玩家按了什么），视觉表现用<strong>物理结果</strong>（角色真的在动吗）。两者不一致是正常的、正确的分工。</p>
+<ul>
+<li>实例：按 W 被墙挡住 → 逻辑 Walk、视觉 Idle（<a href="lesson-06.html">第06课</a> / <a href="lesson-07-09.html">第09课</a>）</li>
+<li>命名习惯也体现这条：<code>Want To Run</code>（意图）vs <code>E_PlayerState</code>（结论）</li>
+</ul>
+<h2>4. 通用的功能写基类，不写子类</h2>
+<p>所有同类对象都要用的能力，提到父类；子类只配差异。</p>
+<ul>
+<li>实例：<code>getAimSocketLocation</code> 写在 <code>BP_WeaponBase</code>，以后每把枪自动继承（<a href="lesson-11.html">第11课</a>）</li>
+<li>推论：发现自己在第二个子类里复制同样的节点时，就该上提了</li>
+</ul>
+<h2>5. 有时序依赖就防御</h2>
+<p>&quot;A 创建可能晚于 B 读取&quot;的地方，读取前必须 <strong>Is Valid</strong>。别赌初始化顺序。</p>
+<ul>
+<li>实例：动画蓝图初始化早于 SpawnWeapon → 读 Weapon 前先 Is Valid，否则 Accessed None（<a href="lesson-11.html">第11课</a>）</li>
+</ul>
+<h2>6. 职责单一，解耦优先</h2>
+<p>一块功能一个蓝图，改一边不影响另一边。</p>
+<ul>
+<li>实例：枪从角色组件树拆成独立 Actor（复用/可维护/扩展）（<a href="lesson-10.html">第10课</a>）</li>
+</ul>
+<h2>7. 手感优先：过渡动画 &gt; 硬插值</h2>
+<p>引擎的混合时长硬插值拉长就僵；有现成过渡动画序列时，用<strong>过渡状态</strong>替代，再补<strong>打断边</strong>保证跟手。</p>
+<ul>
+<li>实例：ToAim/ToIdle 过渡态 + 两条打断边 + OR Run 强制切换（<a href="lesson-07-09.html">第09课</a>）</li>
+<li>推论：玩家输入的响应永远比动画完整性优先——该打断就打断</li>
+</ul>
+<h2>8. 元原则：先澄清，再作答/记录</h2>
+<p>不理解的地方不乱编。节点连接、变量来源、对象关系有疑问 → 对照工程验证或找人确认，<strong>确认到无疑问再写进笔记</strong>。</p>
+<ul>
+<li>来历：本笔记整理过程中发生过 7 次纠正（名字搞错、对象搞错、Cast 用途搞错、引擎自动节点当成手工摆放……），全部因为违反了这条</li>
+</ul>
+
+    
+    <div class="pager">
+      <a href="appendix-workflow.html">← 附录六 · 工具链与环境</a>
+      <span></span>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>

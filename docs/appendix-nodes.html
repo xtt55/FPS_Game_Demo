@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>附录 · 蓝图通用节点速查 · UE5 FPS 学习笔记</title>
+<title>附录一 · 蓝图通用节点速查 · UE5 FPS 学习笔记</title>
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -24,10 +24,16 @@
 <a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
 <a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
 <a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
-<a class="nav-link active" href="appendix-nodes.html">附录 · 通用节点速查</a>
+<a class="nav-link active" href="appendix-nodes.html">附录一 · 通用节点速查</a>
+<a class="nav-link" href="appendix-troubleshooting.html">附录二 · 踩坑速查</a>
+<a class="nav-link" href="appendix-architecture.html">附录三 · 数据流全景</a>
+<a class="nav-link" href="appendix-sop.html">附录四 · SOP 清单</a>
+<a class="nav-link" href="appendix-terms.html">附录五 · 术语对照</a>
+<a class="nav-link" href="appendix-workflow.html">附录六 · 工具链与环境</a>
+<a class="nav-link" href="appendix-principles.html">附录七 · 设计原则</a>
   </nav>
   <main class="content">
-    <h1 class="page-title">附录 · 蓝图通用节点速查</h1>
+    <h1 class="page-title">附录一 · 蓝图通用节点速查</h1>
     
     <blockquote>
 <p>本页汇总第 01–11 课蓝图里出现过的<strong>通用节点</strong>，按用途分六类。
@@ -61,7 +67,7 @@
 <li><strong>作用</strong>：动画蓝图<strong>每帧</strong>触发，类似动画版的 Tick。</li>
 <li><strong>针脚</strong>：<code>Delta Time X</code>（绿 float）= 本帧间隔时间。</li>
 <li><strong>场景</strong>：每帧同步变量给动画图用。</li>
-<li><strong>实例</strong>：第 07 课人物 ABP 每帧把角色的 Move X/Y、E Player State 拷进自己的变量。</li>
+<li><strong>实例</strong>：第 07 课人物 ABP 每帧把角色的 Move X/Y、E_PlayerState 拷进自己的变量。</li>
 </ul>
 <h3>EnhancedInputAction IA_*（输入事件）</h3>
 <ul>
@@ -73,7 +79,7 @@
 </ul>
 </li>
 <li><strong>场景</strong>：一切操作输入的入口。</li>
-<li><strong>实例</strong>：第 04 课 IA_Move 的 Triggered 驱动移动，Completed 把 Move X/Y 清零；第 06 课 IA_Run 的 Triggered/Completed 分别写 <code>Want to Run = true/false</code>。</li>
+<li><strong>实例</strong>：第 04 课 IA_Move 的 Triggered 驱动移动，Completed 把 Move X/Y 清零；第 06 课 IA_Run 的 Triggered/Completed 分别写 <code>Want To Run = true/false</code>。</li>
 </ul>
 <hr>
 <h2>二、对象引用与类型转换类</h2>
@@ -159,7 +165,7 @@
 <ul>
 <li><strong>作用</strong>：SET 写变量（有白线进出，赋值完继续走）；GET 读变量（纯数据节点，无白线）。</li>
 <li><strong>技巧</strong>：从节点引脚拖出后选「提升为变量（Promote To Variable）」可就地建变量。</li>
-<li><strong>实例</strong>：第 06 课 <code>Set E Player State</code>；第 07 课动画蓝图里四个 SET 把角色数据拷成自己的变量。</li>
+<li><strong>实例</strong>：第 06 课 <code>Set E_PlayerState</code>；第 07 课动画蓝图里四个 SET 把角色数据拷成自己的变量。</li>
 </ul>
 <h3>Break Vector2D / 分割结构体引脚</h3>
 <ul>
@@ -171,7 +177,7 @@
 <ul>
 <li><strong>作用</strong>：纯函数，输入两个值，输出红色布尔。无白线，不消耗执行流。</li>
 <li><strong>注意</strong>：比较枚举要用<strong>等于/不等于（枚举）</strong>，别用数值版；搜「不等于」用英文输入法敲 <code>!</code>。</li>
-<li><strong>实例</strong>：第 06 课 <code>Move X &gt; 0</code>、<code>Velocity.Length &gt; 0</code>；第 07–09 课 <code>E Player State == Run</code>。</li>
+<li><strong>实例</strong>：第 06 课 <code>Move X &gt; 0</code>、<code>Velocity.Length &gt; 0</code>；第 07–09 课 <code>E_PlayerState == Run</code>。</li>
 </ul>
 <h3>Vector Length</h3>
 <ul>
@@ -182,12 +188,12 @@
 <h3>OR / AND（布尔逻辑）</h3>
 <ul>
 <li><strong>作用</strong>：多条件组合。OR = 任一满足即放行。</li>
-<li><strong>实例</strong>：第 09 课 ToIdle→Move：<code>(剩余时间 &lt; 0.4) OR (E Player State == Run)</code>——正常等动画播完，跑步则立刻切。</li>
+<li><strong>实例</strong>：第 09 课 ToIdle→Move：<code>(剩余时间 &lt; 0.4) OR (E_PlayerState == Run)</code>——正常等动画播完，跑步则立刻切。</li>
 </ul>
 <h3>Select</h3>
 <ul>
 <li><strong>作用</strong>：按输入值从多个候选里选一个输出（类似 switch）。</li>
-<li><strong>实例</strong>：第 06 课 <code>UpdateMoveSpeed</code> 按 <code>E Player State</code> 选出对应的 Max Walk Speed。</li>
+<li><strong>实例</strong>：第 06 课 <code>UpdateMoveSpeed</code> 按 <code>E_PlayerState</code> 选出对应的 Max Walk Speed。</li>
 </ul>
 <h3>Print String</h3>
 <ul>
@@ -243,11 +249,31 @@
 <li><strong>要点</strong>：持续动作（Run、ADS）<strong>必须勾「循环动画」</strong>；一次性过渡（ToAim/ToIdle）<strong>千万别勾</strong>。</li>
 <li><strong>实例</strong>：第 08 课 Run 态播 Sprint（勾循环）；第 09 课 ToAim 播 Idle_to_ADS（不勾）。</li>
 </ul>
-<h3>Blend Poses by Bone / Blend Poses by bool / Blend Poses (枚举)</h3>
+<h3>Blend Poses by bool / Blend Poses（枚举）</h3>
+<p>同一族的姿势混合节点，区别只在「用什么值来选」：</p>
+<table>
+<thead>
+<tr>
+<th align="left">节点</th>
+<th align="left">用什么选</th>
+<th align="left">针脚</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Blend Poses by bool</strong></td>
+<td align="left">一个布尔</td>
+<td align="left"><code>True Pose</code> / <code>False Pose</code>、<code>True Blend Time</code> / <code>False Blend Time</code>、<code>Active Value</code>（红色布尔输入）</td>
+</tr>
+<tr>
+<td align="left"><strong>Blend Poses（枚举）</strong></td>
+<td align="left">一个枚举</td>
+<td align="left"><code>Default Pose</code> + 每个枚举值一个 Pose 脚（**右键节点「添加元素引脚」**手动加）、各自的 Blend Time、<code>Active Enum Value</code></td>
+</tr>
+</tbody></table>
 <ul>
-<li><strong>作用</strong>：按条件在两个（或多个）姿势之间混合。</li>
-<li><strong>针脚</strong>：<code>True/False Pose</code>（或按枚举每个值一个 Pose 脚，右键「添加元素引脚」加）；<code>Active Value</code> = 判断条件；<code>Blend Time</code> = 过渡秒数。</li>
-<li><strong>实例</strong>：第 09 课 Aim 态用「速度 &gt; 0」混合 ADS Walk/Idle（0.1 秒）；第 11 课用 <code>E Player State</code> 枚举混合 Default/Aim 姿势（0.2 秒）。</li>
+<li><strong>Blend Time 的含义</strong>：切到该姿势时的过渡秒数，不是播放时长。</li>
+<li><strong>实例</strong>：第 09 课 Aim 态用 by bool，按「速度 &gt; 0」在 ADS_Walk / ADS_Idle 间切（0.1 秒）；第 11 课用枚举版，按 <code>E_PlayerState</code> 在 Default / Aim 姿势间切（0.2 秒）。</li>
+<li><strong>另有 <code>Layered blend per bone</code></strong>（按骨骼分层混合，可做「上身瞄准、下身走路」）——本项目第 01–11 课<strong>没有用到</strong>，别和 by bool 搞混。</li>
 </ul>
 <h3>Save cached pose / Use cached pose（缓存姿势）</h3>
 <ul>
@@ -288,14 +314,14 @@
 </tr>
 </thead>
 <tbody><tr>
-<td align="left">白（粗）</td>
+<td align="left">⚪ 白（粗）</td>
 <td align="left">执行流</td>
 <td align="left">所有事件的执行顺序</td>
 </tr>
 <tr>
 <td align="left">🔴 红</td>
 <td align="left">布尔 Boolean</td>
-<td align="left">Want to Run、Branch 条件、Active Value</td>
+<td align="left">Want To Run、Branch 条件、Active Value</td>
 </tr>
 <tr>
 <td align="left">🟢 绿</td>
@@ -303,37 +329,40 @@
 <td align="left">Move X、Vector Length 输出、Blend Time</td>
 </tr>
 <tr>
-<td align="left">🔵 蓝</td>
-<td align="left">向量 Vector</td>
+<td align="left">🟡 黄</td>
+<td align="left"><strong>向量 Vector</strong></td>
 <td align="left">Velocity、Forward Vector</td>
 </tr>
 <tr>
-<td align="left">🟡 黄</td>
-<td align="left">旋转器 Rotator</td>
+<td align="left">🟣 紫</td>
+<td align="left"><strong>旋转器 Rotator</strong></td>
 <td align="left">Get Control Rotation 输出</td>
 </tr>
 <tr>
 <td align="left">🟠 橙</td>
 <td align="left">变换 Transform</td>
-<td align="left">Spawn Transform</td>
+<td align="left">SpawnActor 的 Spawn Transform</td>
 </tr>
 <tr>
-<td align="left">🔵 深蓝</td>
+<td align="left">🔵 蓝</td>
 <td align="left">对象引用 Object</td>
 <td align="left">Pawn、Arm、Weapon、Character Movement</td>
 </tr>
 <tr>
 <td align="left">自定义色</td>
 <td align="left">枚举 Enum</td>
-<td align="left">E Player State（Idle/Walk/Run/Aim）</td>
+<td align="left">E_PlayerState（Idle/Walk/Run/Aim）</td>
 </tr>
 </tbody></table>
-<p>一句话记忆：<strong>红色是判断题、绿色是数字、蓝色是向量、深蓝是对象、白线是先后顺序</strong>。</p>
+<p>一句话记忆：<strong>红色是判断题、绿色是数字、黄色是向量、蓝色是对象、白线是先后顺序</strong>。</p>
+<blockquote>
+<p><strong>别把连线颜色和节点标题栏颜色混为一谈</strong>：上表是引脚/连线的颜色（代表数据类型）；节点标题栏另有一套配色（事件红、纯函数绿、函数入口紫等），与数据类型无关。</p>
+</blockquote>
 
     
     <div class="pager">
       <a href="lesson-11.html">← 11 完善瞄准系统（上）</a>
-      <span></span>
+      <a href="appendix-troubleshooting.html">附录二 · 踩坑速查 →</a>
     </div>
   </main>
 </div>

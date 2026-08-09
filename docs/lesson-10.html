@@ -24,7 +24,13 @@
 <a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
 <a class="nav-link active" href="lesson-10.html">10 模块化设计及DeBug</a>
 <a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
-<a class="nav-link" href="appendix-nodes.html">附录 · 通用节点速查</a>
+<a class="nav-link" href="appendix-nodes.html">附录一 · 通用节点速查</a>
+<a class="nav-link" href="appendix-troubleshooting.html">附录二 · 踩坑速查</a>
+<a class="nav-link" href="appendix-architecture.html">附录三 · 数据流全景</a>
+<a class="nav-link" href="appendix-sop.html">附录四 · SOP 清单</a>
+<a class="nav-link" href="appendix-terms.html">附录五 · 术语对照</a>
+<a class="nav-link" href="appendix-workflow.html">附录六 · 工具链与环境</a>
+<a class="nav-link" href="appendix-principles.html">附录七 · 设计原则</a>
   </nav>
   <main class="content">
     <h1 class="page-title">第10课 · 模块化设计及DeBug</h1>
@@ -63,8 +69,12 @@
 <p>一句话：<strong>职责单一，改一块不影响另一块。</strong></p>
 <h2>二、枪械基类 BP_WeaponBase</h2>
 <p>位置：<code>Scripts/Weapon/Base</code>。类型：蓝图类-Actor。定义：枪械基类，保存枪械共有属性，例如子弹。</p>
+<blockquote>
+<p>⚠️ <strong>命名备注</strong>：本笔记统一写作 <code>BP_WeaponBase</code>（正确拼写），但<strong>工程里实际的资产名是 <code>BP_WeaponBaes</code></strong>（当初手滑打错了）。因为已有子类继承和引用，暂不改名以免引用出错。在引擎里搜索资产时请用 <code>BP_WeaponBaes</code>。</p>
+</blockquote>
 <p>配置：</p>
-<p><strong>1. 创建骨骼网格体组件，覆盖掉默认的根组件 DefaultSceneRoot</strong>：</p>
+<p><strong>1. 创建骨骼网格体组件，覆盖掉默认的根组件 DefaultSceneRoot</strong></p>
+<p>DefaultSceneRoot 是新建 Actor 蓝图时自带的空根节点。把自己加的骨骼网格体组件<strong>拖到它上面</strong>即可替换成根组件：</p>
 <p><a class="img-link" href="assets/img/l10-weaponbase-root.png" target="_blank" rel="noopener"><img src="assets/img/l10-weaponbase-root.png" alt="WeaponBase 骨骼网格体覆盖根组件" loading="lazy"></a></p>
 <p><strong>2. 添加变量</strong>：<code>Ammo</code> 是子弹数量，类型为整数。</p>
 <p><a class="img-link" href="assets/img/l10-weaponbase-ammo.png" target="_blank" rel="noopener"><img src="assets/img/l10-weaponbase-ammo.png" alt="WeaponBase Ammo 变量" loading="lazy"></a></p>
@@ -81,7 +91,8 @@
 <p><a class="img-link" href="assets/img/l10-virtus-scope.png" target="_blank" rel="noopener"><img src="assets/img/l10-virtus-scope.png" alt="倍镜" loading="lazy"></a></p>
 <p><a class="img-link" href="assets/img/l10-virtus-stock.png" target="_blank" rel="noopener"><img src="assets/img/l10-virtus-stock.png" alt="枪托" loading="lazy"></a></p>
 <blockquote>
-<p><strong>注意</strong>：要将枪械主体、枪管、弹匣、倍镜、枪托等骨骼的碰撞预设改为 <strong>NoCollision</strong>，否则会和角色碰撞冲突，导致人物方向失灵、无法移动。</p>
+<p><strong>注意</strong>：要将枪械主体、枪管、弹匣、倍镜、枪托<strong>全部</strong>的碰撞预设改为 <strong>NoCollision</strong>，否则会和角色胶囊体碰撞冲突，导致人物方向失灵、无法移动。</p>
+<p>改法：在组件列表里多选这些部件 → 右侧细节面板 → <strong>碰撞（Collision）</strong> 分类 → <strong>碰撞预设（Collision Presets）</strong> 下拉选 <code>NoCollision</code>。</p>
 </blockquote>
 <p><a class="img-link" href="assets/img/l10-virtus-nocollision.png" target="_blank" rel="noopener"><img src="assets/img/l10-virtus-nocollision.png" alt="NoCollision" loading="lazy"></a></p>
 <h2>四、角色侧：删旧枪 + SpawnWeapon 函数</h2>
@@ -130,7 +141,7 @@
 <tbody><tr>
 <td align="left"><strong>ABP_FPSPlayer</strong></td>
 <td align="left">人物动画蓝图</td>
-<td align="left"><strong>权威数据源</strong>：从角色 Cast 拿到 Move X / Move Y / E Player State / Character Movement，自己持有，<strong>保持不变</strong></td>
+<td align="left"><strong>权威数据源</strong>：从角色 Cast 拿到 Move X / Move Y / E_PlayerState / Character Movement，自己持有，<strong>保持不变</strong></td>
 </tr>
 <tr>
 <td align="left"><strong>ABP_VIRTUL</strong></td>
@@ -179,7 +190,7 @@ SET → 存为变量 As ABP_FPSPlayer      ← 缓存「人物动画蓝图引用
 As ABP_FPSPlayer（上链缓存的人物动画蓝图引用，直接拖出来用）
   ├─ 读 Move X            → SET Move X
   ├─ 读 Move Y            → SET Move Y
-  ├─ 读 E Player State    → SET E Player State
+  ├─ 读 E_PlayerState    → SET E_PlayerState
   └─ 读 Character Movement → SET Character Movement
 </code></pre>
 <p>下链<strong>不再各自走一遍 Cast 链</strong>，整张图 Cast 链只执行一次。枪械因此与人物<strong>共用同一份变量</strong>。</p>
@@ -262,7 +273,7 @@ As ABP_FPSPlayer（上链缓存的人物动画蓝图引用，直接拖出来用�
 <h3>前提与注意事项</h3>
 <ul>
 <li><strong>前提</strong>：角色 / 动画蓝图对应关系在运行期稳定（单机 FPS demo 一般成立）；若游戏里会动态换角色 / 切换 Pawn，「只 Cast 一次」会拿到过期引用，需要在 <code>On Possessed</code> 之类事件里重新 Cast。</li>
-<li><strong>命名提醒</strong>：<code>As ABP_FPSPlayer</code> 这个变量名在枪械蓝图里存的是「人物动画蓝图引用」，容易一眼看混（像是枪械自己）。可改名 <code>OwningCharABP</code> 或 <code>CharacterAnimBP</code> 更清晰。</li>
+<li><strong>命名容易看混</strong>：<code>As ABP_FPSPlayer</code> 这个变量在<strong>枪械</strong>蓝图里，但它存的是<strong>人物动画蓝图的引用</strong>（不是枪械自己）。这是 Cast 节点输出脚的默认名字，工程里保持原样即可——看到它时记住&quot;这是人物的 ABP&quot;就行。</li>
 </ul>
 <hr>
 <h2>易错点速查</h2>

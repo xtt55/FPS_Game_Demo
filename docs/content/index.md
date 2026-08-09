@@ -18,7 +18,18 @@
 <a class="lesson-card" href="lesson-07-09.html"><div class="n">第07–09课</div><div class="t">制作动画系统（上/中/下）</div></a>
 <a class="lesson-card" href="lesson-10.html"><div class="n">第10课</div><div class="t">模块化设计及DeBug</div></a>
 <a class="lesson-card" href="lesson-11.html"><div class="n">第11课</div><div class="t">完善瞄准系统（上）</div></a>
-<a class="lesson-card" href="appendix-nodes.html"><div class="n">附录</div><div class="t">蓝图通用节点速查</div></a>
+</div>
+
+## 附录（回查工具）
+
+<div class="lesson-grid">
+<a class="lesson-card" href="appendix-nodes.html"><div class="n">附录一</div><div class="t">蓝图通用节点速查</div></a>
+<a class="lesson-card" href="appendix-troubleshooting.html"><div class="n">附录二</div><div class="t">踩坑速查（症状 → 原因 → 修复）</div></a>
+<a class="lesson-card" href="appendix-architecture.html"><div class="n">附录三</div><div class="t">数据流全景（工程总架构）</div></a>
+<a class="lesson-card" href="appendix-sop.html"><div class="n">附录四</div><div class="t">常用操作 SOP 清单</div></a>
+<a class="lesson-card" href="appendix-terms.html"><div class="n">附录五</div><div class="t">UE 中英术语对照</div></a>
+<a class="lesson-card" href="appendix-workflow.html"><div class="n">附录六</div><div class="t">工具链与环境</div></a>
+<a class="lesson-card" href="appendix-principles.html"><div class="n">附录七</div><div class="t">设计原则</div></a>
 </div>
 
 ## 核心资产速查
@@ -28,7 +39,7 @@
 | `BP_FPS_Player` | 蓝图类（角色） | FPS 玩家角色，移动/视角/状态逻辑都在这里 |
 | `BP_FPS_GameMode` | 蓝图类（游戏模式） | 指定默认 Pawn 为 BP_FPS_Player |
 | `IMC_FPS_Input` + `IA_*` | 增强输入 | 移动 / 视角 / 跑步 / 瞄准的输入映射 |
-| `EPlayerState` | 枚举 | Idle / Walk / Run / Aim 四种角色状态 |
+| `E_PlayerState` | 枚举 | Idle / Walk / Run / Aim 四种角色状态 |
 | `ABP_FPSPlayer` | 动画蓝图（人物） | **权威数据源**，驱动手臂动画 |
 | `ABP_VIRTUL` | 动画蓝图（枪械） | 复用 ABP_FPSPlayer 的变量，驱动枪械动画 |
 | `BS_FPSPlayer` / `BS_VIRTUL` | 混合空间 | 八方向移动动画混合（人物 / 枪械） |

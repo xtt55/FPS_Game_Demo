@@ -24,7 +24,13 @@
 <a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
 <a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
 <a class="nav-link active" href="lesson-11.html">11 完善瞄准系统（上）</a>
-<a class="nav-link" href="appendix-nodes.html">附录 · 通用节点速查</a>
+<a class="nav-link" href="appendix-nodes.html">附录一 · 通用节点速查</a>
+<a class="nav-link" href="appendix-troubleshooting.html">附录二 · 踩坑速查</a>
+<a class="nav-link" href="appendix-architecture.html">附录三 · 数据流全景</a>
+<a class="nav-link" href="appendix-sop.html">附录四 · SOP 清单</a>
+<a class="nav-link" href="appendix-terms.html">附录五 · 术语对照</a>
+<a class="nav-link" href="appendix-workflow.html">附录六 · 工具链与环境</a>
+<a class="nav-link" href="appendix-principles.html">附录七 · 设计原则</a>
   </nav>
   <main class="content">
     <h1 class="page-title">第11课 · 完善瞄准系统（上）</h1>
@@ -34,7 +40,7 @@
 <li>在枪骨骼 <code>body</code> 上加 <strong>AimSocket</strong> 插槽，定位瞄准时头部应凑到的位置。</li>
 <li>父类 <code>BP_WeaponBase</code> 提供 <code>getAimSocketLocation</code> 函数（子类自动继承）。</li>
 <li>角色 <code>SpawnWeapon</code> 缓存 <code>Weapon</code> 引用；人物 ABP 每帧取插槽位置。</li>
-<li>AnimGraph：缓存 Basic 姿势 → 按 <code>E Player State</code> 混合；Aim 时用 <strong>Transform (Modify) Bone</strong> 把 Head 移到插槽。</li>
+<li>AnimGraph：缓存 Basic 姿势 → 按 <code>E_PlayerState</code> 混合；Aim 时用 <strong>Transform (Modify) Bone</strong> 把 Head 移到插槽。</li>
 <li>Debug：ABP 初始化早于武器生成，<code>Weapon</code> 可能为空 → 用 <strong>Is Valid</strong> 护住。</li>
 </ol>
 <hr>
@@ -53,9 +59,12 @@
 <p>在 <code>BP_FPS_Player</code> 的 <code>SpawnWeapon</code> 函数中，把 <code>SpawnActor BP_VIRTUS</code> 的返回值提升为变量 <code>Weapon</code>（第 10 课已做），供动画蓝图访问该武器实例并取到插槽位置。</p>
 <h2>第五步：ABP_FPSPlayer Event Graph 取插槽位置</h2>
 <p><a class="img-link" href="assets/img/l11-abp-eventgraph-aimsocket.png" target="_blank" rel="noopener"><img src="assets/img/l11-abp-eventgraph-aimsocket.png" alt="Event Graph 取 AimSocket" loading="lazy"></a></p>
-<p>在已有的 Cast 玩家之后：GET <code>Weapon</code> → 调用 <code>getAimSocketLocation</code> → SET 存进变量（图上显示为 <code>Arm Socket Location Return</code>，与 <code>AimSocketLocationReturn</code> 是<strong>同一来源</strong>——虚幻显示变量名时会在大写字母之间自动加空格）。</p>
+<p>在已有的 Cast 玩家之后：GET <code>Weapon</code> → 调用 <code>getAimSocketLocation</code> → SET 存进变量 <strong><code>AimSocketLocationReturn</code></strong>。</p>
 <blockquote>
-<p><strong>注意 Is Valid 节点</strong>：整个流程执行顺序有先后——动画蓝图初始化很早，<code>SpawnWeapon</code> 可能在后几帧才给 <code>Weapon</code> 赋值。<code>Is Valid</code> 可以检测 Weapon 变量是否为空，仅 Valid 时才调函数，否则退出 PIE 会报「尝试读取 Weapon 时结果为无（Accessed None）」。</p>
+<p><strong>别被显示名迷惑</strong>：这个变量在蓝图里显示成 <code>Aim Socket Location Return</code>（UE 会在大写字母之间自动加空格显示）。<strong>它和 <code>AimSocketLocationReturn</code> 是同一个变量</strong>，不是两个。同理，<code>E_PlayerState</code> 的类型会显示成 <code>E Player State</code>。</p>
+</blockquote>
+<blockquote>
+<p><strong>注意 Is Valid 节点</strong>：整个流程执行顺序有先后——动画蓝图初始化很早，<code>SpawnWeapon</code> 可能在后几帧才给 <code>Weapon</code> 赋值。<code>Is Valid</code> 可以检测 Weapon 变量是否为空，仅 Valid 时才调函数，否则退出 PIE（Play In Editor，编辑器内运行）时会报「尝试读取 Weapon 时结果为无（Accessed None）」。</p>
 </blockquote>
 <h2>第六步：ABP_FPSPlayer AnimGraph 改头部骨骼</h2>
 <p><a class="img-link" href="assets/img/l11-abp-animgraph-headaim.png" target="_blank" rel="noopener"><img src="assets/img/l11-abp-animgraph-headaim.png" alt="AnimGraph 瞄准头部" loading="lazy"></a></p>
@@ -65,7 +74,7 @@
 </blockquote>
 <p>核心思路：不是单独做一套 Aim 动画，而是用 <code>Transform (Modify) Bone</code> <strong>程序化地</strong>把 Head 骨骼「搬」到枪械上预留的 AimSocket 插槽位置。</p>
 <h3>数据流全景</h3>
-<pre><code>                    Arm Socket Location Return（= AimSocket 世界坐标）
+<pre><code>                    AimSocketLocationReturn（= AimSocket 世界坐标）
                            ↓ Translation
 Use cached pose &#39;Basic&#39;         ↓
     ↓                      Transform (Modify) Bone ← Bone to Modify = Head
@@ -80,7 +89,7 @@ Use cached pose &#39;Basic&#39;         ↓
     │        │                     │
     └───────┼─────────────────────┘
             ↓
-    Blend Poses (E:PlayerState)    ← E Player State 枚举控制切换
+    Blend Poses (E:PlayerState)    ← E_PlayerState 枚举控制切换
             ↓ Result
        Output Pose → 屏幕上的角色
 </code></pre>
@@ -115,7 +124,7 @@ Use cached pose &#39;Basic&#39;         ↓
 </tr>
 <tr>
 <td align="left"><strong>Blend Poses (E:PlayerState)</strong> ⭐ 状态混合</td>
-<td align="left">右键节点「添加元素引脚 Aim」——只加 Aim，因为这里是瞄准动作；Default/Aim Blend Time 都设 <strong>0.2</strong> 秒，让探头/缩头过渡舒缓；Active Enum Value 接 <code>E Player State</code></td>
+<td align="left">右键节点「添加元素引脚 Aim」——只加 Aim，因为这里是瞄准动作；Default/Aim Blend Time 都设 <strong>0.2</strong> 秒，让探头/缩头过渡舒缓；Active Enum Value 接 <code>E_PlayerState</code></td>
 </tr>
 <tr>
 <td align="left"><strong>Output Pose</strong></td>
@@ -138,7 +147,7 @@ Use cached pose &#39;Basic&#39;         ↓
 </tr>
 <tr>
 <td align="left">Translation</td>
-<td align="left">接 <code>Arm Socket Location Return</code></td>
+<td align="left">接 <code>AimSocketLocationReturn</code></td>
 <td align="left">头部要平移到的目标位置 = AimSocket 世界坐标</td>
 </tr>
 <tr>
@@ -186,7 +195,7 @@ Use cached pose &#39;Basic&#39;         ↓
     
     <div class="pager">
       <a href="lesson-10.html">← 10 模块化设计及DeBug</a>
-      <a href="appendix-nodes.html">附录 · 通用节点速查 →</a>
+      <a href="appendix-nodes.html">附录一 · 通用节点速查 →</a>
     </div>
   </main>
 </div>

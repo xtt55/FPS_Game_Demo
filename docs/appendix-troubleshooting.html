@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>附录二 · 踩坑速查（症状 → 原因 → 修复） · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link" href="index.html">首页</a>
+<a class="nav-link" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
+<a class="nav-link" href="appendix-nodes.html">附录一 · 通用节点速查</a>
+<a class="nav-link active" href="appendix-troubleshooting.html">附录二 · 踩坑速查</a>
+<a class="nav-link" href="appendix-architecture.html">附录三 · 数据流全景</a>
+<a class="nav-link" href="appendix-sop.html">附录四 · SOP 清单</a>
+<a class="nav-link" href="appendix-terms.html">附录五 · 术语对照</a>
+<a class="nav-link" href="appendix-workflow.html">附录六 · 工具链与环境</a>
+<a class="nav-link" href="appendix-principles.html">附录七 · 设计原则</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">附录二 · 踩坑速查（症状 → 原因 → 修复）</h1>
+    
+    <blockquote>
+<p>按<strong>症状</strong>索引的踩坑速查表。遇到怪事先在这里搜症状，比按课翻快。
+每条注明出处课程，点进去看详细上下文。</p>
+</blockquote>
+<h2>输入与移动</h2>
+<table>
+<thead>
+<tr>
+<th align="left">症状</th>
+<th align="left">原因</th>
+<th align="left">修复</th>
+<th align="left">出处</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">松开按键角色一直走</td>
+<td align="left">IA_Move 的 <strong>Completed</strong> 没把 Move X/Y 清零（Triggered 松开后就停跑，变量卡在最后的值）</td>
+<td align="left">Completed 分支补 SET Move X/Y = 0</td>
+<td align="left"><a href="lesson-04.html">第04课</a> / <a href="lesson-06.html">第06课</a></td>
+</tr>
+<tr>
+<td align="left">鼠标上滑视角却向下</td>
+<td align="left">鼠标 Y 轴方向反了</td>
+<td align="left">在 <strong>IMC 的 IA_Look</strong> 上加修改器 <strong>Negate</strong>（只反转 Y），不要到处乘 -1</td>
+<td align="left"><a href="lesson-03.html">第03课</a></td>
+</tr>
+<tr>
+<td align="left">WASD 左右反了/前后左右对调</td>
+<td align="left">A/D 漏了 Swizzle，或 A 漏了 Negate</td>
+<td align="left">W 默认；S=Negate；D=Swizzle；A=Swizzle+Negate</td>
+<td align="left"><a href="lesson-03.html">第03课</a></td>
+</tr>
+<tr>
+<td align="left">低头按 W 越走越慢/卡住</td>
+<td align="left">移动时把 Pitch 也喂给了方向向量</td>
+<td align="left">Get Control Rotation <strong>只连 Z（Yaw）</strong></td>
+<td align="left"><a href="lesson-04.html">第04课</a></td>
+</tr>
+<tr>
+<td align="left">只按跑步键跑不起来</td>
+<td align="left">设计上必须 <strong>W + 跑步键</strong>同时（Move X &gt; 0 且 Want To Run）</td>
+<td align="left">不是 bug，是优先级设计</td>
+<td align="left"><a href="lesson-06.html">第06课</a></td>
+</tr>
+<tr>
+<td align="left">配完输入按键完全没反应</td>
+<td align="left">第 03 课只配了映射，<strong>还没写移动逻辑</strong>；或 GameMode 没在项目设置里指定</td>
+<td align="left">先确认项目设置→默认模式；逻辑在第 04 课</td>
+<td align="left"><a href="lesson-03.html">第03课</a></td>
+</tr>
+<tr>
+<td align="left">换关卡后 GameMode 失效</td>
+<td align="left">只设了「世界场景设置→游戏模式重载」（仅当前关卡）</td>
+<td align="left">改到项目设置→默认模式（全局）</td>
+<td align="left"><a href="lesson-03.html">第03课</a></td>
+</tr>
+<tr>
+<td align="left">自定义相机后上下看没反应</td>
+<td align="left">引擎不再代管默认摄像机，缺 Tick 同步</td>
+<td align="left">Event Tick → Get Control Rotation → Set World Rotation 到 Arm（连 Y、Z）</td>
+<td align="left"><a href="lesson-05.html">第05课</a></td>
+</tr>
+<tr>
+<td align="left">奔跑时画面只有平移没有晃动</td>
+<td align="left">Camera 的「使用 Pawn 控制旋转」没关</td>
+<td align="left">取消勾选</td>
+<td align="left"><a href="lesson-05.html">第05课</a> / <a href="lesson-10.html">第10课</a></td>
+</tr>
+<tr>
+<td align="left">枪口/手臂太近被裁掉</td>
+<td align="left">近剪切平面（Near Clip Plane）默认值太大</td>
+<td align="left">项目设置改为 0.1，<strong>改完重启引擎</strong></td>
+<td align="left"><a href="lesson-05.html">第05课</a></td>
+</tr>
+</tbody></table>
+<h2>动画</h2>
+<table>
+<thead>
+<tr>
+<th align="left">症状</th>
+<th align="left">原因</th>
+<th align="left">修复</th>
+<th align="left">出处</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">前后左右都没动画，一直 Idle</td>
+<td align="left">Update Animation 里 <strong>Cast 的执行针没接</strong></td>
+<td align="left">接上白色执行线</td>
+<td align="left"><a href="lesson-07-09.html">第07课</a></td>
+</tr>
+<tr>
+<td align="left">动画前后和左右对调</td>
+<td align="left">Move X/Y 接混合空间时接反</td>
+<td align="left">Move X → Forward 轴，Move Y → Right 轴</td>
+<td align="left"><a href="lesson-07-09.html">第07课</a></td>
+</tr>
+<tr>
+<td align="left">搜 <code>run</code> 找不到跑步动画</td>
+<td align="left">序列名是 <strong>Sprint</strong></td>
+<td align="left">搜 <code>sprint</code></td>
+<td align="left"><a href="lesson-07-09.html">第08课</a></td>
+</tr>
+<tr>
+<td align="left">搜索框搜不到「不等于」节点</td>
+<td align="left">中文输入法敲了 <code>！</code></td>
+<td align="left">切英文输入法敲 <code>!</code>，选「不等于（枚举）」</td>
+<td align="left"><a href="lesson-07-09.html">第08课</a></td>
+</tr>
+<tr>
+<td align="left">枚举比较不生效</td>
+<td align="left">用了数值的「等于」</td>
+<td align="left">用<strong>等于/不等于（枚举）</strong></td>
+<td align="left"><a href="lesson-07-09.html">第08课</a></td>
+</tr>
+<tr>
+<td align="left">冲刺/瞄准动画播一次就停</td>
+<td align="left">忘勾<strong>循环动画</strong></td>
+<td align="left">序列节点 Details 勾 Loop</td>
+<td align="left"><a href="lesson-07-09.html">第08/09课</a></td>
+</tr>
+<tr>
+<td align="left">永远进不了 Aim / 回不了 Move</td>
+<td align="left">ToAim/ToIdle <strong>勾了循环</strong>（过渡动画永远播不完，剩余时间永不 &lt; 0.4）</td>
+<td align="left">过渡序列<strong>不要</strong>勾循环</td>
+<td align="left"><a href="lesson-07-09.html">第09课</a></td>
+</tr>
+<tr>
+<td align="left">松瞄再冲刺有明显延迟</td>
+<td align="left">ToIdle→Move 缺 <strong>OR Run</strong></td>
+<td align="left">条件改为 <code>(剩余时间&lt;0.4) OR (E_PlayerState==Run)</code></td>
+<td align="left"><a href="lesson-07-09.html">第09课</a></td>
+</tr>
+<tr>
+<td align="left">手臂和枪动画穿模/不同步</td>
+<td align="left">两边混合空间的平滑时间/过渡曲线不一致</td>
+<td align="left">人物与枪械参数保持一致</td>
+<td align="left"><a href="lesson-07-09.html">第07课</a></td>
+</tr>
+<tr>
+<td align="left">瞄准时只会站着瞄，走动没变化</td>
+<td align="left">Event Graph 没同步 Character Movement 进 ABP</td>
+<td align="left">补 GET Character Movement → 提升为变量</td>
+<td align="left"><a href="lesson-07-09.html">第09课</a></td>
+</tr>
+</tbody></table>
+<h2>武器与模块化</h2>
+<table>
+<thead>
+<tr>
+<th align="left">症状</th>
+<th align="left">原因</th>
+<th align="left">修复</th>
+<th align="left">出处</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">人物方向失灵、无法移动</td>
+<td align="left">枪械部件和角色胶囊<strong>互卡碰撞</strong></td>
+<td align="left">枪械主体+枪管+弹匣+倍镜+枪托全部 <strong>NoCollision</strong></td>
+<td align="left"><a href="lesson-10.html">第10课</a></td>
+</tr>
+<tr>
+<td align="left">场景里没有枪</td>
+<td align="left">写了 <code>SpawnWeapon</code> 但没在 BeginPlay 调用</td>
+<td align="left">BeginPlay 链尾调 SpawnWeapon</td>
+<td align="left"><a href="lesson-10.html">第10课</a></td>
+</tr>
+<tr>
+<td align="left">SpawnActor 编译报错</td>
+<td align="left">Spawn Transform 是重组状态没有值</td>
+<td align="left">右键<strong>分割结构体引脚</strong>（默认 0 即可，位置靠 Attach）</td>
+<td align="left"><a href="lesson-10.html">第10课</a></td>
+</tr>
+<tr>
+<td align="left">枪械 ABP 拿不到玩家</td>
+<td align="left">SpawnActor 的 <strong>Owner 没接 Self</strong></td>
+<td align="left">Owner ← self</td>
+<td align="left"><a href="lesson-10.html">第10课</a></td>
+</tr>
+<tr>
+<td align="left">狂按瞄准/奔跑时人枪脱节、卡顿</td>
+<td align="left">枪械 ABP 每帧自己 Cast 角色拿变量</td>
+<td align="left">重构：Initialize 缓存人物 ABP 引用，Update 只读缓存</td>
+<td align="left"><a href="lesson-10.html">第10课</a></td>
+</tr>
+<tr>
+<td align="left">Get Anim Instance 拿不到东西</td>
+<td align="left">Target 接了角色 Actor</td>
+<td align="left">Target 必须接<strong>骨骼网格体</strong>（Arm 变量）</td>
+<td align="left"><a href="lesson-10.html">第10课</a></td>
+</tr>
+<tr>
+<td align="left">配件飘在半空</td>
+<td align="left">没设父项插槽，或设了还飘</td>
+<td align="left">设父项插槽 + 位置/旋转重置为 0</td>
+<td align="left"><a href="lesson-05.html">第05课</a></td>
+</tr>
+</tbody></table>
+<h2>瞄准</h2>
+<table>
+<thead>
+<tr>
+<th align="left">症状</th>
+<th align="left">原因</th>
+<th align="left">修复</th>
+<th align="left">出处</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">退出 PIE 报 Accessed None（Weapon 为空）</td>
+<td align="left">ABP 初始化早于 SpawnWeapon 赋值</td>
+<td align="left">读 Weapon 前先过 <strong>Is Valid</strong></td>
+<td align="left"><a href="lesson-11.html">第11课</a></td>
+</tr>
+<tr>
+<td align="left">瞄准时头漂到奇怪位置</td>
+<td align="left">AimSocket 名字拼错，Get Socket Location 退回组件原点</td>
+<td align="left">插槽名复制粘贴，别手打</td>
+<td align="left"><a href="lesson-11.html">第11课</a></td>
+</tr>
+<tr>
+<td align="left">头凑过去但对不齐瞄具</td>
+<td align="left">Modify Bone 用了组件空间，或平移模式不是替换</td>
+<td align="left">平移空间 <strong>World Space</strong> + 模式 <strong>Replace Existing</strong></td>
+<td align="left"><a href="lesson-11.html">第11课</a></td>
+</tr>
+<tr>
+<td align="left">瞄准头不动</td>
+<td align="left">Blend Poses 枚举节点没加 Aim 引脚，或 Aim 支路没接 Modify Bone</td>
+<td align="left">右键「添加元素引脚 Aim」并接好支路</td>
+<td align="left"><a href="lesson-11.html">第11课</a></td>
+</tr>
+</tbody></table>
+<h2>编辑器与环境</h2>
+<table>
+<thead>
+<tr>
+<th align="left">症状</th>
+<th align="left">原因</th>
+<th align="left">修复</th>
+<th align="left">出处</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">每次开工程都重新编译着色器、C 盘爆红</td>
+<td align="left">DDC 在默认系统盘路径</td>
+<td align="left">编辑器偏好设置把全局本地 DDC 改到 SSD 大盘</td>
+<td align="left"><a href="lesson-02.html">第02课</a></td>
+</tr>
+<tr>
+<td align="left">IA/IMC 打开成悬浮小窗</td>
+<td align="left">资产编辑器打开位置默认新窗口</td>
+<td align="left">编辑器偏好设置搜 open → 改为「主窗口」</td>
+<td align="left"><a href="lesson-03.html">第03课</a></td>
+</tr>
+<tr>
+<td align="left">IMC 加映射点错加号</td>
+<td align="left">Default Key Mappings 上下有两个 <code>+</code></td>
+<td align="left">点<strong>上面那个</strong></td>
+<td align="left"><a href="lesson-03.html">第03课</a></td>
+</tr>
+<tr>
+<td align="left">Forward/Right Vector 节点找不到/行为怪</td>
+<td align="left">点成了「变换」分类下的同名项</td>
+<td align="left">选<strong>数学→向量</strong>分类</td>
+<td align="left"><a href="lesson-04.html">第04课</a></td>
+</tr>
+</tbody></table>
+<h2>通用调试三板斧</h2>
+<ol>
+<li><strong>Print String</strong>：<code>Duration = 0</code> 让打印常显在屏幕左上角，盯变量值最直观（第 06 课打印过枚举状态和速度）。</li>
+<li><strong>Cast Failed 接 Print String</strong>：Cast 失败是<strong>静默</strong>的，不接打印你永远不知道链断了。</li>
+<li><strong>怀疑时序就加 Is Valid</strong>：凡是&quot;A 生成/初始化可能晚于 B 读取&quot;的地方（如武器 vs 动画蓝图），先 Is Valid 护住再调函数。</li>
+</ol>
+
+    
+    <div class="pager">
+      <a href="appendix-nodes.html">← 附录一 · 通用节点速查</a>
+      <a href="appendix-architecture.html">附录三 · 数据流全景 →</a>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>

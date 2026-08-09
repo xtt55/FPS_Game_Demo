@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>附录六 · 工具链与环境（Git / 部署 / 笔记规范） · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link" href="index.html">首页</a>
+<a class="nav-link" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
+<a class="nav-link" href="appendix-nodes.html">附录一 · 通用节点速查</a>
+<a class="nav-link" href="appendix-troubleshooting.html">附录二 · 踩坑速查</a>
+<a class="nav-link" href="appendix-architecture.html">附录三 · 数据流全景</a>
+<a class="nav-link" href="appendix-sop.html">附录四 · SOP 清单</a>
+<a class="nav-link" href="appendix-terms.html">附录五 · 术语对照</a>
+<a class="nav-link active" href="appendix-workflow.html">附录六 · 工具链与环境</a>
+<a class="nav-link" href="appendix-principles.html">附录七 · 设计原则</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">附录六 · 工具链与环境（Git / 部署 / 笔记规范）</h1>
+    
+    <blockquote>
+<p>工程之外的知识：环境、Git、部署、笔记规范。这类东西最容易隔段时间就忘。</p>
+</blockquote>
+<h2>引擎与项目环境</h2>
+<ul>
+<li><strong>引擎版本</strong>：课程用 UE 5.7 录制，我的工程是 <strong>5.8</strong></li>
+<li><strong>DDC（派生数据缓存）</strong>：编辑器偏好设置 → 全局 → 派生数据缓存，改到 SSD 大盘；这是<strong>本机偏好，不进 Git</strong>，换电脑要重设</li>
+<li><strong>项目设置</strong>：默认游戏模式 = <code>BP_FPS_GameMode</code>；近剪切平面 = 0.1（改完重启）</li>
+<li><strong>目录约定</strong>：自己的蓝图放 <code>Content/Scripts/</code>（Players / Weapon / Input / System…），素材包 <code>XL_FPSPack</code> 不动</li>
+</ul>
+<h2>Git 工作流</h2>
+<ul>
+<li><strong>正仓库</strong>：<code>D:\Unreal Projects\FPS_Game_Demo</code>（GitHub: <code>xtt55/FPS_Game_Demo</code>，<strong>SSH</strong> 认证；GitHub 早已停用密码认证）</li>
+<li><strong>换电脑</strong>：直接 git pull/push，不再用&quot;临时副本拷贝合并&quot;那套（Demo1 流程已废弃）</li>
+<li><strong>.gitignore</strong>：<code>Binaries/ Build/ DerivedDataCache/ Intermediate/ Saved/</code> 等引擎生成目录已排除，不要提交</li>
+<li><strong>.gitattributes</strong>：<code>*.uasset / *.umap</code> 等标为 binary（禁止换行转换和自动合并）；<code>docs/</code> 下网页文件统一 <code>eol=lf</code></li>
+<li><strong>Windows 目录大小写坑</strong>：<code>Docs</code> 和 <code>docs</code> 在 Windows 是同一个目录，但 Git/GitHub 区分大小写——GitHub Pages 只认小写 <code>docs</code>，曾用 <code>git mv</code> 两步法（<code>git mv Docs tmp</code> → <code>git mv tmp docs</code>）修正</li>
+</ul>
+<h2>笔记站部署</h2>
+<ul>
+<li>站点源在仓库 <code>docs/</code>：内容是 <code>docs/content/*.md</code>，跑 <code>node docs/build/build.mjs</code> 生成静态 HTML（无需任何 npm 依赖）</li>
+<li><strong>GitHub Pages 免费版只支持公开仓库</strong>；本仓库是私有的，所以用 <strong>Cloudflare Pages</strong>（免费、支持私有仓库）：<ul>
+<li>Cloudflare → Workers &amp; Pages → Create → Connect to Git → 选 FPS_Game_Demo</li>
+<li>Framework preset = None；Build command 留空；Output directory = <code>docs</code></li>
+<li>部署后得到 <code>*.pages.dev</code> 域名，push 到 main 自动更新</li>
+</ul>
+</li>
+</ul>
+<h2>笔记规范（长期约定）</h2>
+<ol>
+<li><strong>文件名英文、内容中文</strong>（如 <code>AnimGraph_HeadAimAnim.md</code>），命名风格统一</li>
+<li><strong>不留依赖外部图片的无图指代</strong>——不写&quot;如图1所示&quot;又不贴图；要么贴图，要么用自洽的文字/ASCII 图</li>
+<li><strong>截图语义化命名</strong>：<code>l课号-描述.png</code>（如 <code>l10-spawnweapon-function.png</code>），不要留 <code>image-23.png</code> 这种</li>
+<li><strong>按课程章节线性组织</strong>，不按资源类型组织——否则前置依赖会让回忆顺序错乱</li>
+<li><strong>不编造</strong>：节点连接、变量来源、对象关系有疑问时，先对照工程或找人确认，写进笔记的必须是验证过的</li>
+</ol>
+
+    
+    <div class="pager">
+      <a href="appendix-terms.html">← 附录五 · 术语对照</a>
+      <a href="appendix-principles.html">附录七 · 设计原则 →</a>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>

@@ -51,6 +51,12 @@
 - 运行：`node docs/build/build.mjs` 生成 `docs/*.html`。
 - 图片拷贝+重命名：`docs/build/copy-images.mjs`（内含 旧名→新名 映射表）。
 
+## 2026-08-09 二次更新
+
+- 重构 lesson-07-09：去掉上/中/下分节与双套编号，改为「整体结构 → 混合空间 → EventGraph → 挂载 → 状态机骨架 → 各状态内部 → 转换规则」单主线
+- 新增 7 个附录页：通用节点速查 / 踩坑速查 / 数据流全景 / SOP 清单 / 术语对照 / 工具链与环境 / 设计原则
+- 记忆沉淀：全局记忆 `C:\Users\Administrator\.codeium\windsurf\memories\global_rules.md` + 项目根 `AGENTS.md`
+
 ## 待办（全部完成 ✅）
 
 - [x] copy-images.mjs + 执行（76/76 全部拷贝成功）

@@ -24,7 +24,13 @@
 <a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
 <a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
 <a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
-<a class="nav-link" href="appendix-nodes.html">附录 · 通用节点速查</a>
+<a class="nav-link" href="appendix-nodes.html">附录一 · 通用节点速查</a>
+<a class="nav-link" href="appendix-troubleshooting.html">附录二 · 踩坑速查</a>
+<a class="nav-link" href="appendix-architecture.html">附录三 · 数据流全景</a>
+<a class="nav-link" href="appendix-sop.html">附录四 · SOP 清单</a>
+<a class="nav-link" href="appendix-terms.html">附录五 · 术语对照</a>
+<a class="nav-link" href="appendix-workflow.html">附录六 · 工具链与环境</a>
+<a class="nav-link" href="appendix-principles.html">附录七 · 设计原则</a>
   </nav>
   <main class="content">
     <h1 class="page-title">第05课 · 完善角色细节</h1>
@@ -55,13 +61,20 @@
 <ul>
 <li>旋转：X 轴旋转 -90 度，不然摄像机视角会倒置</li>
 <li>缩放：全部为 0.25</li>
-<li>父项套接字：关联到 <strong>Head</strong> 上，这样才能真实反馈角色走路的颠簸感</li>
-<li>摄像机选项-<strong>使用 Pawn 控制旋转：取消勾选</strong>，这样奔跑状态下摄像机就能随着角色晃动，增加枪械游戏的手感和沉浸感</li>
+<li>父项套接字（Parent Socket）：关联到 <strong>Head</strong> 上，这样才能真实反馈角色走路的颠簸感<ul>
+<li><strong>套接字/插槽（Socket）</strong>= 骨骼上预先做好的挂点，来自骨骼网格体资产本身（不是蓝图自动生成的）。绑到 Head 插槽后，相机就跟着头部骨骼动</li>
+</ul>
+</li>
+<li>摄像机选项-<strong>使用 Pawn 控制旋转：取消勾选</strong><ul>
+<li>勾选时相机会被锁死到控制器旋转上，走路跑步的骨骼位移传不过来，画面只有平移；取消后相机跟随 Head 插槽的骨骼动画，奔跑时才有晃动，增加沉浸感</li>
+</ul>
+</li>
 </ul>
 <p><a class="img-link" href="assets/img/l05-camera-settings.png" target="_blank" rel="noopener"><img src="assets/img/l05-camera-settings.png" alt="摄像机设置" loading="lazy"></a></p>
 <h3>3. 枪（方法一：直接挂载组件）</h3>
 <blockquote>
-<p>这是早期做法。第 10 课会把枪拆成独立蓝图（方法二），届时这里的 Gun 组件会被删掉。</p>
+<p>⚠️ <strong>这是早期临时做法，会被推翻</strong>。本课把枪和配件直接挂在角色组件树里，是为了快速看到效果；<a href="lesson-10.html">第 10 课</a>做模块化时，会把整个 Gun 组件及配件<strong>从角色里删掉</strong>，改成独立的 <code>BP_VIRTUS</code> 蓝图运行时生成。</p>
+<p>两处的配件配置（枪管/弹匣/枪托挂插槽、位置归零、关碰撞）<strong>做法完全一样</strong>，只是搬到了枪械蓝图里——第 10 课看到类似内容不必疑惑，那不是重复讲。</p>
 </blockquote>
 <p>枪，属于<strong>骨骼网格体组件</strong>：</p>
 <ul>
@@ -162,7 +175,7 @@
 </tbody></table>
 <hr>
 <h2>三、近剪切平面（Near Clip Plane）</h2>
-<p>项目设置搜索 near clip，<strong>设置为 0.1</strong>。</p>
+<p><strong>项目设置 → 引擎 → 通用设置 → 设置 → 近裁剪平面（Near Clip Plane）</strong>，设置为 <strong>0.1</strong>（也可以直接在项目设置搜索框搜 <code>near clip</code>）。</p>
 <p>作用：决定摄像机能看到的最近距离，任何距离摄像机小于这个数值的物体都会被直接切掉。主要是为了防止角色离墙太近时遮挡视线；默认值偏大时还会把太近的枪口/手臂裁掉。改完<strong>重启引擎</strong>生效。</p>
 <p><a class="img-link" href="assets/img/l05-near-clip-plane.png" target="_blank" rel="noopener"><img src="assets/img/l05-near-clip-plane.png" alt="近剪切平面" loading="lazy"></a></p>
 <p>另外可把 Arm 上移到胶囊体横线附近（正常人眼高度）。</p>

@@ -31,7 +31,7 @@
 - **作用**：动画蓝图**每帧**触发，类似动画版的 Tick。
 - **针脚**：`Delta Time X`（绿 float）= 本帧间隔时间。
 - **场景**：每帧同步变量给动画图用。
-- **实例**：第 07 课人物 ABP 每帧把角色的 Move X/Y、E Player State 拷进自己的变量。
+- **实例**：第 07 课人物 ABP 每帧把角色的 Move X/Y、E_PlayerState 拷进自己的变量。
 
 ### EnhancedInputAction IA_*（输入事件）
 
@@ -41,7 +41,7 @@
   - `Completed`（白线）：键**抬起时**触发一次；
   - `Action Value`（数据线）：输入的值，类型取决于 IA 的值类型（Vector2D / bool…）。
 - **场景**：一切操作输入的入口。
-- **实例**：第 04 课 IA_Move 的 Triggered 驱动移动，Completed 把 Move X/Y 清零；第 06 课 IA_Run 的 Triggered/Completed 分别写 `Want to Run = true/false`。
+- **实例**：第 04 课 IA_Move 的 Triggered 驱动移动，Completed 把 Move X/Y 清零；第 06 课 IA_Run 的 Triggered/Completed 分别写 `Want To Run = true/false`。
 
 ---
 
@@ -131,7 +131,7 @@
 
 - **作用**：SET 写变量（有白线进出，赋值完继续走）；GET 读变量（纯数据节点，无白线）。
 - **技巧**：从节点引脚拖出后选「提升为变量（Promote To Variable）」可就地建变量。
-- **实例**：第 06 课 `Set E Player State`；第 07 课动画蓝图里四个 SET 把角色数据拷成自己的变量。
+- **实例**：第 06 课 `Set E_PlayerState`；第 07 课动画蓝图里四个 SET 把角色数据拷成自己的变量。
 
 ### Break Vector2D / 分割结构体引脚
 
@@ -143,7 +143,7 @@
 
 - **作用**：纯函数，输入两个值，输出红色布尔。无白线，不消耗执行流。
 - **注意**：比较枚举要用**等于/不等于（枚举）**，别用数值版；搜「不等于」用英文输入法敲 `!`。
-- **实例**：第 06 课 `Move X > 0`、`Velocity.Length > 0`；第 07–09 课 `E Player State == Run`。
+- **实例**：第 06 课 `Move X > 0`、`Velocity.Length > 0`；第 07–09 课 `E_PlayerState == Run`。
 
 ### Vector Length
 
@@ -154,12 +154,12 @@
 ### OR / AND（布尔逻辑）
 
 - **作用**：多条件组合。OR = 任一满足即放行。
-- **实例**：第 09 课 ToIdle→Move：`(剩余时间 < 0.4) OR (E Player State == Run)`——正常等动画播完，跑步则立刻切。
+- **实例**：第 09 课 ToIdle→Move：`(剩余时间 < 0.4) OR (E_PlayerState == Run)`——正常等动画播完，跑步则立刻切。
 
 ### Select
 
 - **作用**：按输入值从多个候选里选一个输出（类似 switch）。
-- **实例**：第 06 课 `UpdateMoveSpeed` 按 `E Player State` 选出对应的 Max Walk Speed。
+- **实例**：第 06 课 `UpdateMoveSpeed` 按 `E_PlayerState` 选出对应的 Max Walk Speed。
 
 ### Print String
 
@@ -218,11 +218,18 @@
 - **要点**：持续动作（Run、ADS）**必须勾「循环动画」**；一次性过渡（ToAim/ToIdle）**千万别勾**。
 - **实例**：第 08 课 Run 态播 Sprint（勾循环）；第 09 课 ToAim 播 Idle_to_ADS（不勾）。
 
-### Blend Poses by Bone / Blend Poses by bool / Blend Poses (枚举)
+### Blend Poses by bool / Blend Poses（枚举）
 
-- **作用**：按条件在两个（或多个）姿势之间混合。
-- **针脚**：`True/False Pose`（或按枚举每个值一个 Pose 脚，右键「添加元素引脚」加）；`Active Value` = 判断条件；`Blend Time` = 过渡秒数。
-- **实例**：第 09 课 Aim 态用「速度 > 0」混合 ADS Walk/Idle（0.1 秒）；第 11 课用 `E Player State` 枚举混合 Default/Aim 姿势（0.2 秒）。
+同一族的姿势混合节点，区别只在「用什么值来选」：
+
+| 节点 | 用什么选 | 针脚 |
+|:---|:---|:---|
+| **Blend Poses by bool** | 一个布尔 | `True Pose` / `False Pose`、`True Blend Time` / `False Blend Time`、`Active Value`（红色布尔输入） |
+| **Blend Poses（枚举）** | 一个枚举 | `Default Pose` + 每个枚举值一个 Pose 脚（**右键节点「添加元素引脚」**手动加）、各自的 Blend Time、`Active Enum Value` |
+
+- **Blend Time 的含义**：切到该姿势时的过渡秒数，不是播放时长。
+- **实例**：第 09 课 Aim 态用 by bool，按「速度 > 0」在 ADS_Walk / ADS_Idle 间切（0.1 秒）；第 11 课用枚举版，按 `E_PlayerState` 在 Default / Aim 姿势间切（0.2 秒）。
+- **另有 `Layered blend per bone`**（按骨骼分层混合，可做「上身瞄准、下身走路」）——本项目第 01–11 课**没有用到**，别和 by bool 搞混。
 
 ### Save cached pose / Use cached pose（缓存姿势）
 
@@ -258,13 +265,15 @@
 
 | 颜色 | 类型 | 本项目例子 |
 |:---|:---|:---|
-| 白（粗） | 执行流 | 所有事件的执行顺序 |
-| 🔴 红 | 布尔 Boolean | Want to Run、Branch 条件、Active Value |
+| ⚪ 白（粗） | 执行流 | 所有事件的执行顺序 |
+| 🔴 红 | 布尔 Boolean | Want To Run、Branch 条件、Active Value |
 | 🟢 绿 | 浮点 Float | Move X、Vector Length 输出、Blend Time |
-| 🔵 蓝 | 向量 Vector | Velocity、Forward Vector |
-| 🟡 黄 | 旋转器 Rotator | Get Control Rotation 输出 |
-| 🟠 橙 | 变换 Transform | Spawn Transform |
-| 🔵 深蓝 | 对象引用 Object | Pawn、Arm、Weapon、Character Movement |
-| 自定义色 | 枚举 Enum | E Player State（Idle/Walk/Run/Aim） |
+| 🟡 黄 | **向量 Vector** | Velocity、Forward Vector |
+| 🟣 紫 | **旋转器 Rotator** | Get Control Rotation 输出 |
+| 🟠 橙 | 变换 Transform | SpawnActor 的 Spawn Transform |
+| 🔵 蓝 | 对象引用 Object | Pawn、Arm、Weapon、Character Movement |
+| 自定义色 | 枚举 Enum | E_PlayerState（Idle/Walk/Run/Aim） |
 
-一句话记忆：**红色是判断题、绿色是数字、蓝色是向量、深蓝是对象、白线是先后顺序**。
+一句话记忆：**红色是判断题、绿色是数字、黄色是向量、蓝色是对象、白线是先后顺序**。
+
+> **别把连线颜色和节点标题栏颜色混为一谈**：上表是引脚/连线的颜色（代表数据类型）；节点标题栏另有一套配色（事件红、纯函数绿、函数入口紫等），与数据类型无关。

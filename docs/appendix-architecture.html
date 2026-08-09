@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>附录三 · 数据流全景（工程总架构） · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link" href="index.html">首页</a>
+<a class="nav-link" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
+<a class="nav-link" href="appendix-nodes.html">附录一 · 通用节点速查</a>
+<a class="nav-link" href="appendix-troubleshooting.html">附录二 · 踩坑速查</a>
+<a class="nav-link active" href="appendix-architecture.html">附录三 · 数据流全景</a>
+<a class="nav-link" href="appendix-sop.html">附录四 · SOP 清单</a>
+<a class="nav-link" href="appendix-terms.html">附录五 · 术语对照</a>
+<a class="nav-link" href="appendix-workflow.html">附录六 · 工具链与环境</a>
+<a class="nav-link" href="appendix-principles.html">附录七 · 设计原则</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">附录三 · 数据流全景（工程总架构）</h1>
+    
+    <blockquote>
+<p>整个 FPS_Game_Demo 的数据流总图：输入怎么一路变成屏幕上的动画。
+各课讲的是「每一块怎么搭」，本页讲「块与块怎么连」。</p>
+</blockquote>
+<h2>一、主链路：输入 → 动画</h2>
+<pre><code>鼠标 / 键盘
+   │
+   ▼
+IA_Look / IA_Move / IA_Run / IA_Aim        （输入操作，第03课）
+   │  由 IMC_FPS_Input 映射键位
+   ▼
+BP_FPS_Player 的变量
+   ├─ Move X / Move Y        （IA_Move 缓存，Completed 清零）
+   ├─ Want To Run / Want To Aim（输入意图，IA_Run/IA_Aim 写入）
+   └─ E_PlayerState          （UpdatePlayerState 每帧算出：Idle/Walk/Run/Aim）
+   │
+   ▼ 每帧 Event Blueprint Update Animation 同步（Cast To BP_FPS_Player 读变量）
+ABP_FPSPlayer（人物动画蓝图）★ 权威数据源
+   │
+   ├─ AnimGraph：Basic 状态机（Move/Run/Aim/ToAim/ToIdle）→ 手臂动画
+   │
+   └─◄ ABP_VIRTUL（枪械动画蓝图）从这里读变量
+        （Initialize 一次性缓存人物 ABP 引用，Update 每帧复用，零 Cast）
+        → 枪械自己的 AnimGraph → 枪械动画
+</code></pre>
+<p><strong>关键规则</strong>：</p>
+<ul>
+<li><code>BP_FPS_Player</code> 是数据的<strong>生产者</strong>；<code>ABP_FPSPlayer</code> 是动画侧的<strong>权威数据源</strong>；<code>ABP_VIRTUL</code> 是<strong>复用者</strong>——它不直接 Cast 角色，只读人物 ABP 已同步好的变量。</li>
+<li>方向是单向的：角色 → 人物 ABP → 枪械 ABP。<strong>不要反向，也不要让枪械 ABP 直接读角色</strong>（会同步失败/卡顿，见<a href="lesson-10.html">第10课</a>）。</li>
+</ul>
+<h2>二、瞄准数据链（第 11 课）</h2>
+<pre><code>枪骨骼 body 上的 AimSocket 插槽（定位用，存在骨骼资产里）
+   │
+   ▼ BP_WeaponBase.getAimSocketLocation()（基类函数，所有枪通用）
+世界空间坐标 AimSocketLocationReturn
+   │
+   ▼ BP_FPS_Player.Weapon 变量（SpawnWeapon 时 SpawnActor 返回值提升而来）
+   │    ↑ 注意 Is Valid：ABP 初始化早于武器生成
+   ▼ ABP_FPSPlayer Event Graph 每帧读取存入同名变量
+   ▼
+AnimGraph：Transform (Modify) Bone（Bone=Head，Replace Existing，World Space）
+   → Blend Poses (E_PlayerState)：Aim 时头凑到插槽，0.2 秒过渡
+</code></pre>
+<p><strong>关键规则</strong>：插槽函数写在<strong>基类</strong> <code>BP_WeaponBase</code>（换枪通用）；Modify Bone 的平移空间必须和数据来源一致（都是世界空间）。</p>
+<h2>三、两条「意图 vs 结果」的分工</h2>
+<table>
+<thead>
+<tr>
+<th align="left">层</th>
+<th align="left">管什么</th>
+<th align="left">数据源</th>
+<th align="left">例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Event Graph / 角色蓝图</strong></td>
+<td align="left">逻辑状态</td>
+<td align="left"><strong>输入意图</strong>（玩家按了什么键）</td>
+<td align="left">UpdatePlayerState 用 Want To Run/Aim + Move X 算枚举</td>
+</tr>
+<tr>
+<td align="left"><strong>AnimGraph</strong></td>
+<td align="left">视觉表现</td>
+<td align="left"><strong>实际物理结果</strong>（角色真的在动吗）</td>
+<td align="left">Aim 态内用 Velocity.Length &gt; 0 混合 ADS Idle/Walk</td>
+</tr>
+</tbody></table>
+<p>按了 W 但被墙挡住：逻辑说 Walk，视觉播 Idle——两者都对，各管各的。</p>
+<h2>四、事件频率地图（哪里跑几次）</h2>
+<table>
+<thead>
+<tr>
+<th align="left">事件</th>
+<th align="left">频率</th>
+<th align="left">放什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Event BeginPlay</td>
+<td align="left">一次</td>
+<td align="left">激活输入映射（Add Mapping Context）、调 SpawnWeapon</td>
+</tr>
+<tr>
+<td align="left">Event BlueprintInitializeAnimation</td>
+<td align="left">一次</td>
+<td align="left">多层 Cast 链 + 缓存引用（<strong>性能关键</strong>）</td>
+</tr>
+<tr>
+<td align="left">Event Tick</td>
+<td align="left">每帧</td>
+<td align="left">视角同步到 Arm、UpdatePlayerState、UpdateMoveSpeed</td>
+</tr>
+<tr>
+<td align="left">Event BlueprintUpdateAnimation</td>
+<td align="left">每帧</td>
+<td align="left">只读写变量，<strong>禁止 Cast</strong></td>
+</tr>
+</tbody></table>
+<h2>五、资产关系图</h2>
+<pre><code>BP_FPS_GameMode ──指定默认 Pawn──► BP_FPS_Player
+                                      │ 组件：Arm（挂 Camera）、生成并 Attach
+                                      ▼
+BP_WeaponBase ◄──继承── BP_VIRTUS（SK_MCX-VIRTUS + 配件 + AimSocket）
+                                      │ 动画类
+                                      ▼
+ABP_FPSPlayer（手臂）        ABP_VIRTUL（枪械，读人物 ABP 变量）
+   │ 使用                        │ 使用
+   ▼                            ▼
+BS_FPSPlayer（人物混合空间）   BS_VIRTUL（枪械混合空间，参数与人物一致）
+</code></pre>
+
+    
+    <div class="pager">
+      <a href="appendix-troubleshooting.html">← 附录二 · 踩坑速查</a>
+      <a href="appendix-sop.html">附录四 · SOP 清单 →</a>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>
