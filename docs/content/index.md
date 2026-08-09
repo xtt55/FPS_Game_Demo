@@ -18,6 +18,7 @@
 <a class="lesson-card" href="lesson-07-09.html"><div class="n">第07–09课</div><div class="t">制作动画系统（上/中/下）</div></a>
 <a class="lesson-card" href="lesson-10.html"><div class="n">第10课</div><div class="t">模块化设计及DeBug</div></a>
 <a class="lesson-card" href="lesson-11.html"><div class="n">第11课</div><div class="t">完善瞄准系统（上）</div></a>
+<a class="lesson-card" href="appendix-nodes.html"><div class="n">附录</div><div class="t">蓝图通用节点速查</div></a>
 </div>
 
 ## 核心资产速查

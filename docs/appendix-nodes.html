@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>附录 · 蓝图通用节点速查 · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link" href="index.html">首页</a>
+<a class="nav-link" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link" href="lesson-11.html">11 完善瞄准系统（上）</a>
+<a class="nav-link active" href="appendix-nodes.html">附录 · 通用节点速查</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">附录 · 蓝图通用节点速查</h1>
+    
+    <blockquote>
+<p>本页汇总第 01–11 课蓝图里出现过的<strong>通用节点</strong>，按用途分六类。
+每个节点说明：<strong>作用 → 针脚含义 → 什么时候用 → 本项目里的实例</strong>。
+先记住连线规则：白色粗线 = 执行流（先后次序）；彩色细线 = 数据（值传递）。无白线的节点是纯函数，只在被需要时计算。</p>
+</blockquote>
+<hr>
+<h2>一、事件入口类（流程的起点）</h2>
+<h3>Event BeginPlay</h3>
+<ul>
+<li><strong>作用</strong>：Actor 进入场景、游戏开始时触发<strong>一次</strong>。</li>
+<li><strong>针脚</strong>：只有一条白色执行输出。</li>
+<li><strong>场景</strong>：一次性初始化——激活输入映射、生成武器、初始化 UI。</li>
+<li><strong>实例</strong>：第 04 课用它激活 <code>IMC_FPS_Input</code>；第 10 课在链尾调 <code>SpawnWeapon</code> 生成枪。</li>
+</ul>
+<h3>Event Tick</h3>
+<ul>
+<li><strong>作用</strong>：<strong>每帧</strong>触发。</li>
+<li><strong>针脚</strong>：<code>Delta Seconds</code>（绿 float）= 距上一帧的秒数，做时间相关计算时用。</li>
+<li><strong>场景</strong>：需要持续跟随/轮询的逻辑。开销敏感，别在里面干重活。</li>
+<li><strong>实例</strong>：第 05 课每帧把 Control Rotation 设给 Arm 的世界旋转；第 06 课每帧调 <code>UpdatePlayerState</code> + <code>UpdateMoveSpeed</code>。</li>
+</ul>
+<h3>Event Blueprint Initialize Animation（动画蓝图）</h3>
+<ul>
+<li><strong>作用</strong>：动画蓝图初始化时触发<strong>一次</strong>，类似动画版的 BeginPlay。</li>
+<li><strong>场景</strong>：缓存引用——把昂贵的 Cast 链结果存成变量。</li>
+<li><strong>实例</strong>：第 10 课枪械 ABP 在这里一次性拿到人物动画蓝图引用。</li>
+</ul>
+<h3>Event Blueprint Update Animation（动画蓝图）</h3>
+<ul>
+<li><strong>作用</strong>：动画蓝图<strong>每帧</strong>触发，类似动画版的 Tick。</li>
+<li><strong>针脚</strong>：<code>Delta Time X</code>（绿 float）= 本帧间隔时间。</li>
+<li><strong>场景</strong>：每帧同步变量给动画图用。</li>
+<li><strong>实例</strong>：第 07 课人物 ABP 每帧把角色的 Move X/Y、E Player State 拷进自己的变量。</li>
+</ul>
+<h3>EnhancedInputAction IA_*（输入事件）</h3>
+<ul>
+<li><strong>作用</strong>：按键/鼠标输入触发的事件节点（第 03 课在 IMC 里绑好键位后可用）。</li>
+<li><strong>针脚</strong>：<ul>
+<li><code>Triggered</code>（白线）：键<strong>按住期间持续</strong>触发；</li>
+<li><code>Completed</code>（白线）：键<strong>抬起时</strong>触发一次；</li>
+<li><code>Action Value</code>（数据线）：输入的值，类型取决于 IA 的值类型（Vector2D / bool…）。</li>
+</ul>
+</li>
+<li><strong>场景</strong>：一切操作输入的入口。</li>
+<li><strong>实例</strong>：第 04 课 IA_Move 的 Triggered 驱动移动，Completed 把 Move X/Y 清零；第 06 课 IA_Run 的 Triggered/Completed 分别写 <code>Want to Run = true/false</code>。</li>
+</ul>
+<hr>
+<h2>二、对象引用与类型转换类</h2>
+<h3>Cast To（类型转换）</h3>
+<ul>
+<li><strong>作用</strong>：把泛化的父类引用转成具体子类，解锁子类专属变量/函数。类比：确认一只 <code>Animal</code> 其实是 <code>Programmer</code>，才能让它写代码。</li>
+<li><strong>针脚</strong>：<ul>
+<li>执行输入/输出（白线）；</li>
+<li><code>Object</code>（深蓝，输入）：要转换的对象；</li>
+<li><code>As XXX</code>（深蓝，输出）：转换成功后的具体类型引用；</li>
+<li><code>Cast Failed</code>（白线）：转换失败走的分支——<strong>建议接 Print String 调试，防止静默失败</strong>。</li>
+</ul>
+</li>
+<li><strong>场景</strong>：拿到一个通用类型（Pawn、Actor、Controller）但要访问自己蓝图里的东西时。</li>
+<li><strong>实例</strong>：第 04 课 <code>Cast To PlayerController</code> 排除 AI；第 10 课三层 Cast（BP_VIRTUS → BP_FPS_Player → ABP_FPSPlayer）逐层解锁，其中 Cast 到角色的唯一目的是取 <code>Arm</code> 变量。</li>
+</ul>
+<h3>Try Get Pawn Owner</h3>
+<ul>
+<li><strong>作用</strong>：获取拥有这个动画蓝图的 Pawn。</li>
+<li><strong>针脚</strong>：Target = self（动画蓝图自己）；<code>Return Value</code>（深蓝）= 通用 Pawn 引用。</li>
+<li><strong>场景</strong>：动画蓝图里找「我附身的角色」。带 Try 是因为不保证有 Pawn。</li>
+<li><strong>实例</strong>：第 07 课人物 ABP 用它拿到 Pawn，再 Cast 成 BP_FPS_Player。</li>
+</ul>
+<h3>Get Controller</h3>
+<ul>
+<li><strong>作用</strong>：获取控制当前 Pawn 的控制器。Target = self 时，多人游戏各玩家各拿各的。</li>
+<li><strong>对比</strong>：<code>Get Player Controller (Index 0)</code> 是写死第一个本地玩家的短写法，单机可用，联机/分屏会踩坑。</li>
+<li><strong>实例</strong>：第 04 课 BeginPlay 链里用它拿控制器再绑输入。</li>
+</ul>
+<h3>Get Owner / Get Owning Actor</h3>
+<ul>
+<li><strong>作用</strong>：<code>Get Owner</code> 拿 Actor 的拥有者（生成时 Owner 脚指定的对象）；<code>Get Owning Actor</code> 拿组件/动画蓝图所属的 Actor。</li>
+<li><strong>实例</strong>：第 10 课枪械 ABP：<code>Get Owning Actor</code> → 拿到 BP_VIRTUS → <code>Get Owner</code> → 拿回归玩家（前提是 SpawnWeapon 时 Owner 接了 Self）。</li>
+</ul>
+<h3>Get Anim Instance</h3>
+<ul>
+<li><strong>作用</strong>：获取骨骼网格体组件上正在跑的动画蓝图实例。</li>
+<li><strong>针脚</strong>：<strong>Target 必须接 SkeletalMeshComponent</strong>（骨骼网格体），不能接角色 Actor。</li>
+<li><strong>实例</strong>：第 10 课 Target 接角色的 <code>Arm</code> 变量，取到人物动画蓝图 ABP_FPSPlayer。</li>
+</ul>
+<h3>Is Valid</h3>
+<ul>
+<li><strong>作用</strong>：检查对象引用是否有效（不为空、没被销毁）。</li>
+<li><strong>场景</strong>：时序不确定时的保护——比如动画蓝图初始化早于武器生成。</li>
+<li><strong>实例</strong>：第 11 课读 <code>Weapon</code> 变量前先 Is Valid，否则退出 PIE 时报 Accessed None。</li>
+</ul>
+<hr>
+<h2>三、输入与移动类</h2>
+<h3>Enhanced Input Local Player Subsystem + Add Mapping Context</h3>
+<ul>
+<li><strong>作用</strong>：增强输入系统的入口；<code>Add Mapping Context</code> 把一套按键映射（IMC）激活。</li>
+<li><strong>针脚</strong>：<code>Mapping Context</code> = 选哪个 IMC；<code>Priority</code> = 多套映射冲突时的优先级（0 即可）。</li>
+<li><strong>场景</strong>：游戏开局激活自定义输入。<strong>注意接在 Cast 成功分支后</strong>，别接 Cast Failed。</li>
+<li><strong>实例</strong>：第 04 课 BeginPlay 链。</li>
+</ul>
+<h3>Add Movement Input</h3>
+<ul>
+<li><strong>作用</strong>：给角色施加一个方向的移动输入。</li>
+<li><strong>针脚</strong>：<code>World Direction</code>（蓝向量）= 移动方向；<code>Scale Value</code>（绿 float）= 强度/速度系数（接 -1~1 的轴值）。</li>
+<li><strong>实例</strong>：第 04 课 前向向量 × Move X、右向向量 × Move Y 各接一个。</li>
+</ul>
+<h3>Get Control Rotation + Get Forward/Right Vector</h3>
+<ul>
+<li><strong>作用</strong>：<code>Get Control Rotation</code> 拿玩家控制器朝向（黄 Rotator）；<code>Get Forward/Right Vector</code> 把旋转转成方向向量（蓝）。</li>
+<li><strong>要点</strong>：移动时<strong>只连 Z（Yaw）</strong>，忽略抬头低头，保证前进方向贴地；抬臂视角时才连 Y（Pitch）+ Z。</li>
+<li><strong>注意</strong>：Forward/Right Vector 要选<strong>数学→向量</strong>分类下的，别点成「变换」里的同名项。</li>
+<li><strong>实例</strong>：第 04 课移动（只连 Z）、第 05 课 Tick 转 Arm（连 Y 和 Z）。</li>
+</ul>
+<h3>Add Controller Yaw / Pitch Input</h3>
+<ul>
+<li><strong>作用</strong>：修改控制器的旋转——Yaw 左右转头、Pitch 抬头低头。</li>
+<li><strong>实例</strong>：第 04 课 IA_Look：鼠标 X → Yaw，鼠标 Y → Pitch。「鼠标上滑却低头」在 IMC 里给 Y 加 Negate 修改器修，不要到处乘 -1。</li>
+</ul>
+<hr>
+<h2>四、流程控制与数据类</h2>
+<h3>Branch（分支）</h3>
+<ul>
+<li><strong>作用</strong>：菱形判断，按条件分流执行。</li>
+<li><strong>针脚</strong>：<code>Condition</code>（红 bool，输入）；<code>True</code> / <code>False</code>（两条白线输出）。</li>
+<li><strong>实例</strong>：第 06 课 <code>UpdatePlayerState</code> 用四个 Branch 串出 Aim &gt; Run &gt; Walk &gt; Idle 的优先级链。</li>
+</ul>
+<h3>SET / GET（变量读写）</h3>
+<ul>
+<li><strong>作用</strong>：SET 写变量（有白线进出，赋值完继续走）；GET 读变量（纯数据节点，无白线）。</li>
+<li><strong>技巧</strong>：从节点引脚拖出后选「提升为变量（Promote To Variable）」可就地建变量。</li>
+<li><strong>实例</strong>：第 06 课 <code>Set E Player State</code>；第 07 课动画蓝图里四个 SET 把角色数据拷成自己的变量。</li>
+</ul>
+<h3>Break Vector2D / 分割结构体引脚</h3>
+<ul>
+<li><strong>作用</strong>：把复合类型拆成分量（Vector2D → X、Y）。</li>
+<li><strong>等价做法</strong>：右键任意结构体引脚选「分割结构体引脚」，省一个节点。</li>
+<li><strong>实例</strong>：第 04 课拆 IA_Move 的 Action Value；第 10 课 SpawnActor 的 Spawn Transform <strong>必须分割</strong>（重组状态没值会编译报错）。</li>
+</ul>
+<h3>比较节点（<code>&gt;</code>、<code>&lt;</code>、<code>==</code>）</h3>
+<ul>
+<li><strong>作用</strong>：纯函数，输入两个值，输出红色布尔。无白线，不消耗执行流。</li>
+<li><strong>注意</strong>：比较枚举要用<strong>等于/不等于（枚举）</strong>，别用数值版；搜「不等于」用英文输入法敲 <code>!</code>。</li>
+<li><strong>实例</strong>：第 06 课 <code>Move X &gt; 0</code>、<code>Velocity.Length &gt; 0</code>；第 07–09 课 <code>E Player State == Run</code>。</li>
+</ul>
+<h3>Vector Length</h3>
+<ul>
+<li><strong>作用</strong>：向量 → 标量（模长，忽略方向）。</li>
+<li><strong>场景</strong>：判断「角色实际有没有在动」。</li>
+<li><strong>实例</strong>：第 06 课状态兜底判断、第 09 课 Aim 态里 Idle/Walk 混合的开关。</li>
+</ul>
+<h3>OR / AND（布尔逻辑）</h3>
+<ul>
+<li><strong>作用</strong>：多条件组合。OR = 任一满足即放行。</li>
+<li><strong>实例</strong>：第 09 课 ToIdle→Move：<code>(剩余时间 &lt; 0.4) OR (E Player State == Run)</code>——正常等动画播完，跑步则立刻切。</li>
+</ul>
+<h3>Select</h3>
+<ul>
+<li><strong>作用</strong>：按输入值从多个候选里选一个输出（类似 switch）。</li>
+<li><strong>实例</strong>：第 06 课 <code>UpdateMoveSpeed</code> 按 <code>E Player State</code> 选出对应的 Max Walk Speed。</li>
+</ul>
+<h3>Print String</h3>
+<ul>
+<li><strong>作用</strong>：在屏幕左上角打印调试文字。</li>
+<li><strong>针脚</strong>：<code>In String</code> = 内容；<code>Duration</code> = 显示时长，<strong>0 = 一直显示</strong>。</li>
+<li><strong>实例</strong>：第 06 课打印角色状态/速度做调试；也可接在 Cast Failed 分支上。</li>
+</ul>
+<hr>
+<h2>五、场景操作类</h2>
+<h3>SpawnActor from Class</h3>
+<ul>
+<li><strong>作用</strong>：运行时动态生成一个 Actor。</li>
+<li><strong>针脚</strong>：<code>Class</code> = 生成什么蓝图；<code>Spawn Transform</code>（橙）= 出生位置（<strong>右键分割结构体引脚</strong>，否则编译报错）；<code>Owner</code>（深蓝）= 拥有者；<code>Return Value</code> = 生成出来的实例引用（建议<strong>提升为变量</strong>保存）。</li>
+<li><strong>实例</strong>：第 10 课 <code>SpawnWeapon</code>：生成 BP_VIRTUS，Owner 接 Self，返回值存为 <code>Weapon</code> 变量。</li>
+</ul>
+<h3>Attach Actor to Component</h3>
+<ul>
+<li><strong>作用</strong>：把一个 Actor 附加到某个<strong>组件</strong>上（注意别选成「附加到 Actor」）。</li>
+<li><strong>针脚</strong>：Target = 被附加的 Actor；<code>Parent</code> = 目标组件；<code>Location/Rotation/Scale Rule</code> = 变换规则，<code>Keep Relative</code> = 保持相对父级的位置。</li>
+<li><strong>实例</strong>：第 10 课把枪附加到角色的 Arm 组件上。</li>
+</ul>
+<h3>Set World Rotation</h3>
+<ul>
+<li><strong>作用</strong>：直接设置组件在<strong>世界空间</strong>的旋转。</li>
+<li><strong>对比</strong>：<code>Set Relative Rotation</code> 是相对父级/插槽的本地旋转，容易和骨骼插槽搅在一起。</li>
+<li><strong>实例</strong>：第 05 课 Tick 里把 Control Rotation 的 Y、Z 设给 Arm（X=0 不歪头），让手臂+相机+枪一起跟视角。</li>
+</ul>
+<h3>Set Max Walk Speed</h3>
+<ul>
+<li><strong>作用</strong>：设置角色移动组件的最大行走速度。Target 接 Character Movement。</li>
+<li><strong>实例</strong>：第 06 课按状态设 400 / 600 / 265，瞄准减速、跑步加速。</li>
+</ul>
+<hr>
+<h2>六、动画图（AnimGraph）专用节点</h2>
+<blockquote>
+<p>AnimGraph 里几乎没有白色执行线，全是「姿势数据」从左流向右，终点是 Output Pose。</p>
+</blockquote>
+<h3>State Machine（状态机）</h3>
+<ul>
+<li><strong>作用</strong>：动画状态的容器，内部是「状态 + 转换规则」的图，对外输出当前激活状态算出的姿势。</li>
+<li><strong>内部</strong>：<code>Entry</code> = 入口（默认状态从它连线）；双击状态进入该状态自己的小动画图；两个状态间的箭头 = 转换规则。</li>
+<li><strong>实例</strong>：第 07–09 课的 Basic 状态机（Move / Run / Aim / ToAim / ToIdle）。</li>
+</ul>
+<h3>BlendSpace Player（混合空间播放器）</h3>
+<ul>
+<li><strong>作用</strong>：按输入坐标在多段动画间混合（如八方向移动）。</li>
+<li><strong>针脚</strong>：横/纵两个 float 输入对应混合空间的两个轴；输出接 Output Animation Pose。</li>
+<li><strong>实例</strong>：第 07 课 Move 态：Move X → Forward 轴、Move Y → Right 轴。</li>
+</ul>
+<h3>Animation Player（序列播放器）</h3>
+<ul>
+<li><strong>作用</strong>：直接播一个动画序列资产。</li>
+<li><strong>要点</strong>：持续动作（Run、ADS）<strong>必须勾「循环动画」</strong>；一次性过渡（ToAim/ToIdle）<strong>千万别勾</strong>。</li>
+<li><strong>实例</strong>：第 08 课 Run 态播 Sprint（勾循环）；第 09 课 ToAim 播 Idle_to_ADS（不勾）。</li>
+</ul>
+<h3>Blend Poses by Bone / Blend Poses by bool / Blend Poses (枚举)</h3>
+<ul>
+<li><strong>作用</strong>：按条件在两个（或多个）姿势之间混合。</li>
+<li><strong>针脚</strong>：<code>True/False Pose</code>（或按枚举每个值一个 Pose 脚，右键「添加元素引脚」加）；<code>Active Value</code> = 判断条件；<code>Blend Time</code> = 过渡秒数。</li>
+<li><strong>实例</strong>：第 09 课 Aim 态用「速度 &gt; 0」混合 ADS Walk/Idle（0.1 秒）；第 11 课用 <code>E Player State</code> 枚举混合 Default/Aim 姿势（0.2 秒）。</li>
+</ul>
+<h3>Save cached pose / Use cached pose（缓存姿势）</h3>
+<ul>
+<li><strong>作用</strong>：把一份算好的姿势存起来（Save / New Save cached pose），后面多处取用（Use cached pose），<strong>只算一次，省性能</strong>。</li>
+<li><strong>实例</strong>：第 11 课 Basic 状态机的姿势被 Default 和 Aim 两条支路共用，缓存后引用两次。</li>
+</ul>
+<h3>Transform (Modify) Bone</h3>
+<ul>
+<li><strong>作用</strong>：程序化修改某根骨骼的位置/旋转/缩放。</li>
+<li><strong>针脚/参数</strong>：<code>Bone to Modify</code> = 目标骨骼；<code>Translation</code> = 目标位置；平移模式 <code>Replace Existing</code> = 直接替换原位置；平移空间要和数据来源一致。</li>
+<li><strong>实例</strong>：第 11 课把 <code>Head</code> 骨骼平移到枪械 AimSocket 的世界坐标（World Space），实现探头瞄准。</li>
+</ul>
+<h3>Local To Component / Component To Local</h3>
+<ul>
+<li><strong>作用</strong>：姿势在骨骼本地空间 ↔ 组件空间之间转换。</li>
+<li><strong>要点</strong>：<strong>不用手工添加</strong>——当上下游节点工作空间不匹配时，引擎连线会自动插入这两个「胶水」节点。</li>
+<li><strong>实例</strong>：第 11 课 cached pose（本地空间）→ Modify Bone（组件空间）→ Blend Poses（本地空间）的链路上自动出现。</li>
+</ul>
+<h3>Get Relevant Anim Time Remaining</h3>
+<ul>
+<li><strong>作用</strong>：获取源状态当前动画的<strong>剩余秒数</strong>（注意别选成「比例 Fraction」版本）。</li>
+<li><strong>场景</strong>：转换规则里「过渡动画快播完才切走」。</li>
+<li><strong>实例</strong>：第 09 课 ToAim→Aim、ToIdle→Move 都用 <code>&lt; 0.4</code> 秒做准入条件。</li>
+</ul>
+<h3>Can Enter Transition / Output Pose</h3>
+<ul>
+<li><strong>Can Enter Transition</strong>：转换规则图的终点，接红色布尔——true 才允许切换状态。</li>
+<li><strong>Output Pose / Output Animation Pose</strong>：动画图/状态内部的最终出口，连进去的姿势就是实际播放结果。</li>
+</ul>
+<hr>
+<h2>附：数据类型与连线颜色速查</h2>
+<table>
+<thead>
+<tr>
+<th align="left">颜色</th>
+<th align="left">类型</th>
+<th align="left">本项目例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">白（粗）</td>
+<td align="left">执行流</td>
+<td align="left">所有事件的执行顺序</td>
+</tr>
+<tr>
+<td align="left">🔴 红</td>
+<td align="left">布尔 Boolean</td>
+<td align="left">Want to Run、Branch 条件、Active Value</td>
+</tr>
+<tr>
+<td align="left">🟢 绿</td>
+<td align="left">浮点 Float</td>
+<td align="left">Move X、Vector Length 输出、Blend Time</td>
+</tr>
+<tr>
+<td align="left">🔵 蓝</td>
+<td align="left">向量 Vector</td>
+<td align="left">Velocity、Forward Vector</td>
+</tr>
+<tr>
+<td align="left">🟡 黄</td>
+<td align="left">旋转器 Rotator</td>
+<td align="left">Get Control Rotation 输出</td>
+</tr>
+<tr>
+<td align="left">🟠 橙</td>
+<td align="left">变换 Transform</td>
+<td align="left">Spawn Transform</td>
+</tr>
+<tr>
+<td align="left">🔵 深蓝</td>
+<td align="left">对象引用 Object</td>
+<td align="left">Pawn、Arm、Weapon、Character Movement</td>
+</tr>
+<tr>
+<td align="left">自定义色</td>
+<td align="left">枚举 Enum</td>
+<td align="left">E Player State（Idle/Walk/Run/Aim）</td>
+</tr>
+</tbody></table>
+<p>一句话记忆：<strong>红色是判断题、绿色是数字、蓝色是向量、深蓝是对象、白线是先后顺序</strong>。</p>
+
+    
+    <div class="pager">
+      <a href="lesson-11.html">← 11 完善瞄准系统（上）</a>
+      <span></span>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>
