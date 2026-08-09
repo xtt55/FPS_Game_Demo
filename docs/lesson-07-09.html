@@ -29,42 +29,54 @@
     <h1 class="page-title">第07–09课 · 制作动画系统（上/中/下）</h1>
     <a class="video-link" href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=8" target="_blank" rel="noopener">▶ 对应视频（P8）</a>
     <blockquote>
-<p>第 07、08、09 课都是搭同一套动画系统，合并成一页方便整体回忆：</p>
-<ul>
-<li><strong>（上）</strong>：建混合空间 + 动画蓝图，同步角色变量，Move 态播八方向移动（<a href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=8">视频 P8</a>）</li>
-<li><strong>（中）</strong>：加 Run 态与双向过渡（<a href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=9">视频 P9</a>）</li>
-<li><strong>（下）</strong>：加 Aim 态、ToAim/ToIdle 过渡动画与打断边（<a href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=10">视频 P10</a>）</li>
-</ul>
-</blockquote>
+<p>对应视频：<a href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=8">P8</a>、<a href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=9">P9</a>、<a href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=10">P10</a>（动画系统三节课合并整理为一套完整流程）。</p>
 <p>涉及资产：<code>ABP_FPSPlayer</code>（人物动画蓝图）/ <code>BS_FPSPlayer</code>（人物混合空间）、<code>ABP_VIRTUL</code>（枪械动画蓝图）/ <code>BS_VIRTUL</code>（枪械混合空间）。</p>
+</blockquote>
+<h2>一、整体结构（先看全貌）</h2>
+<p>动画系统分两侧，每侧一条链路：</p>
+<pre><code>BP_FPS_Player（角色蓝图）
+  │  Event Graph 每帧同步变量（Move X / Move Y / E Player State / Character Movement）
+  ▼
+ABP_FPSPlayer（动画蓝图）
+  │  AnimGraph：状态机算姿势
+  ▼
+Arm / Gun 网格体（动画模式 = 使用动画蓝图）
+</code></pre>
+<p>最终状态机 <code>Basic</code> 里共 5 个状态：</p>
+<pre><code>        ┌──────────► Run ◄──────────┐
+        │            │              │
+Entry ──► Move ──► ToAim ──► Aim    │
+        ▲            ▲    │         │
+        │            │    ▼         │
+        └──── ToIdle ◄────┘         │
+</code></pre>
+<ul>
+<li><strong>Move</strong>：播混合空间（八方向行走 + Idle）</li>
+<li><strong>Run</strong>：播 Sprint 序列</li>
+<li><strong>Aim</strong>：按实际速度在 ADS Idle / ADS Walk 之间混合</li>
+<li><strong>ToAim / ToIdle</strong>：进瞄 / 出瞄的过渡动画状态</li>
+</ul>
 <p>动画资产位置：</p>
 <p><a class="img-link" href="assets/img/l07-anim-assets-location.png" target="_blank" rel="noopener"><img src="assets/img/l07-anim-assets-location.png" alt="动画资产位置" loading="lazy"></a></p>
 <hr>
-<h1>（上）混合空间 + 动画蓝图骨架</h1>
-<h2>本课要解决什么</h2>
-<ol>
-<li>建手臂 / 枪两套<strong>混合空间（BS）+ 动画蓝图（ABP）</strong>。</li>
-<li>每帧从 <code>BP_FPS_Player</code> <strong>同步</strong> <code>Move X</code> / <code>Move Y</code> / <code>E Player State</code> / <code>Character Movement</code>。</li>
-<li>AnimGraph：状态机 → Move 态播混合空间；<strong>Move X→Forward，Move Y→Right</strong>。</li>
-<li>在角色上把 Arm / Gun 的动画模式改成<strong>使用动画蓝图</strong>。</li>
-</ol>
-<p>本课只做<strong>走路四向 + Idle</strong>；跑、瞄准在后面两课。</p>
-<h2>一、混合空间 BS_FPSPlayer</h2>
-<p>对水平坐标和垂直坐标进行设置：水平轴名 <strong>Right</strong>，垂直轴名 <strong>Forward</strong>；范围 -1 ~ 1，网格划分 2，对齐网格。</p>
+<h2>二、混合空间配置</h2>
+<h3>1. BS_FPSPlayer（人物）</h3>
+<p>坐标设置：水平轴名 <strong>Right</strong>，垂直轴名 <strong>Forward</strong>；范围 -1 ~ 1，网格划分 2，对齐网格。</p>
 <p><a class="img-link" href="assets/img/l07-bs-player-axes.png" target="_blank" rel="noopener"><img src="assets/img/l07-bs-player-axes.png" alt="BS_FPSPlayer 坐标设置" loading="lazy"></a></p>
-<p>关联动画：五个采样点——中心 (0,0) 放 Idle，四边放前后左右行走动画。按住 Ctrl 可在面板上预览。</p>
+<p>关联动画，共五个采样点：中心 (0,0) 放 <strong>Idle</strong>，四边放前后左右行走动画。按住 Ctrl 可在面板上预览。</p>
 <p><a class="img-link" href="assets/img/l07-bs-player-anims-1.png" target="_blank" rel="noopener"><img src="assets/img/l07-bs-player-anims-1.png" alt="关联动画 1" loading="lazy"></a></p>
 <p><a class="img-link" href="assets/img/l07-bs-player-anims-2.png" target="_blank" rel="noopener"><img src="assets/img/l07-bs-player-anims-2.png" alt="关联动画 2" loading="lazy"></a></p>
-<h2>二、混合空间 BS_VIRTUL（枪械）</h2>
+<h3>2. BS_VIRTUL（枪械）</h3>
 <p><a class="img-link" href="assets/img/l07-bs-virtus-overview.png" target="_blank" rel="noopener"><img src="assets/img/l07-bs-virtus-overview.png" alt="BS_VIRTUL" loading="lazy"></a></p>
 <p>坐标设置与人物一致。<strong>注意：平滑时间和平滑类型要和人物保持一致，否则可能出现穿模</strong>。</p>
 <p><a class="img-link" href="assets/img/l07-bs-virtus-axes.png" target="_blank" rel="noopener"><img src="assets/img/l07-bs-virtus-axes.png" alt="BS_VIRTUL 坐标设置" loading="lazy"></a></p>
 <p>关联枪械自己的动画：</p>
 <p><a class="img-link" href="assets/img/l07-bs-virtus-anims.png" target="_blank" rel="noopener"><img src="assets/img/l07-bs-virtus-anims.png" alt="BS_VIRTUL 关联动画" loading="lazy"></a></p>
-<h2>三、ABP_FPSPlayer 的 Event Graph：同步角色变量</h2>
-<p><a class="img-link" href="assets/img/l07-abp-eventgraph-sync.png" target="_blank" rel="noopener"><img src="assets/img/l07-abp-eventgraph-sync.png" alt="ABP_FPSPlayer Event Graph" loading="lazy"></a></p>
+<hr>
+<h2>三、Event Graph：同步角色变量</h2>
 <h3>作用</h3>
-<p>把玩家角色 <code>BP_FPS_Player</code> 身上的数据「同步」到动画蓝图自己的变量里，这样 AnimGraph（动画图）才能根据这些数据选动画。</p>
+<p>把玩家角色 <code>BP_FPS_Player</code> 身上的数据「同步」到动画蓝图自己的变量里，AnimGraph 才能根据这些数据选动画。</p>
+<p><a class="img-link" href="assets/img/l07-abp-eventgraph-sync.png" target="_blank" rel="noopener"><img src="assets/img/l07-abp-eventgraph-sync.png" alt="ABP_FPSPlayer Event Graph" loading="lazy"></a></p>
 <h3>节点逐个解释</h3>
 <table>
 <thead>
@@ -103,27 +115,13 @@
 <blockquote>
 <p><strong>易错</strong>：Cast 节点的<strong>执行针一定要接上</strong>。漏接时 AnimBP 里轴一直是 0，看起来「前后左右没动画」。</p>
 </blockquote>
-<h2>四、AnimGraph：状态机 + Move 态</h2>
-<p><strong>作用</strong>：角色按 W/S 时 Move X 变，A/D 时 Move Y 变，混合空间就在这两轴上混合 Idle/前走/后走/左走/右走等动画，实现八方向移动。</p>
-<h3>第一步：新建状态机</h3>
-<p><strong>State Machine 节点</strong>（图中叫 Basic State Machine）：一个「动画状态机」容器，内部放多个状态 + 转换规则，对外输出最终 Pose。<strong>Output Pose</strong> 是 AnimGraph 的最终出口，连进去的 Pose 就是角色实际播放的动画。</p>
-<p>连线：State Machine → Output Pose，意思是「动画蓝图最终输出状态机算出来的结果」。</p>
-<p><a class="img-link" href="assets/img/l07-animgraph-statemachine.png" target="_blank" rel="noopener"><img src="assets/img/l07-animgraph-statemachine.png" alt="状态机连 Output Pose" loading="lazy"></a></p>
-<h3>第二步：添加 Move 状态</h3>
-<p>双击 State Machine 进入内部画布。**Entry（入口节点）**是状态机的起点，游戏一开始从这里出发。从 Entry 拖白线连到一个 <strong>Move</strong> 状态：表示默认进入 Move 状态。</p>
-<p>右上角提示 <code>Move 100.0%</code>：说明当前这个状态一直满权重激活（因为现在只有它一个状态）。</p>
-<p><a class="img-link" href="assets/img/l07-statemachine-entry-move.png" target="_blank" rel="noopener"><img src="assets/img/l07-statemachine-entry-move.png" alt="Entry 连 Move" loading="lazy"></a></p>
-<h3>第三步：在 Move 里放混合空间</h3>
-<p>双击 Move 状态进去，里面是另一个小 AnimGraph。右键拖出 <strong>BlendSpace Player</strong>，选资产 <code>BS_FPSPlayer</code>：</p>
-<ul>
-<li>变量 <strong>Move Y</strong> 接混合空间的 <strong>Right</strong>（左右轴）</li>
-<li>变量 <strong>Move X</strong> 接 <strong>Forward</strong>（前后轴）</li>
-<li>BlendSpace 输出 → <strong>Output Animation Pose</strong>（这个状态自己的 Pose 出口）</li>
-</ul>
-<p><a class="img-link" href="assets/img/l07-move-state-blendspace.png" target="_blank" rel="noopener"><img src="assets/img/l07-move-state-blendspace.png" alt="Move 内 BlendSpace" loading="lazy"></a></p>
-<h3>第四步：在 Move 节点内部点击编译</h3>
-<p><a class="img-link" href="assets/img/l07-move-state-compile.png" target="_blank" rel="noopener"><img src="assets/img/l07-move-state-compile.png" alt="编译" loading="lazy"></a></p>
-<h2>五、挂到网格体</h2>
+<h3>枪械侧 ABP_VIRTUL</h3>
+<p>与人物同理，可以直接从 <code>ABP_FPSPlayer</code> 拷贝节点。注意：拷贝的话变量不会自动创建，对引脚右键「创建变量」。</p>
+<blockquote>
+<p>第 10 课会把枪械 ABP 重构成「初始化时缓存人物 ABP 引用、每帧直接复用人物变量」，见<a href="lesson-10.html">第10课</a>。</p>
+</blockquote>
+<hr>
+<h2>四、把动画蓝图挂到网格体</h2>
 <p>回到 <code>BP_FPS_Player</code>，选中 <strong>Arm</strong>（手臂骨骼网格体）：</p>
 <ul>
 <li>动画模式 → <strong>使用动画蓝图</strong></li>
@@ -131,108 +129,33 @@
 </ul>
 <p><a class="img-link" href="assets/img/l07-arm-anim-class.png" target="_blank" rel="noopener"><img src="assets/img/l07-arm-anim-class.png" alt="Arm 动画类" loading="lazy"></a></p>
 <p><strong>Gun</strong>（枪主体骨骼网格，不是枪管/弹匣等静态网格）同理挂 <code>ABP_VIRTUL</code>。枪管/弹匣是静模，不要给它们挂动画蓝图。</p>
-<h2>六、枪械 ABP_VIRTUL（方法一：单独一份变量）</h2>
-<p>同 <code>ABP_FPSPlayer</code>，可以直接拷贝过来。注意：拷贝的话变量是没创建的，可以对引脚右键「创建变量」。</p>
-<blockquote>
-<p>第 10 课会把它重构成「方法二：人物和枪械共用同一份变量」，见<a href="lesson-10.html">第10课</a>。</p>
-</blockquote>
 <hr>
-<h1>（中）加 Run 状态</h1>
-<p>承接（上）的 Move 态 + 混合空间；本课只补**奔跑（Run）**状态与过渡。瞄准留给（下）。</p>
-<h2>本课要解决什么</h2>
-<ol>
-<li>在状态机里加 <strong>Run</strong> 态，与 Move <strong>一去一回</strong>两条过渡线。</li>
-<li>过渡条件用第 06 课同步来的 <code>E Player State</code>：<code>== Run</code> / <code>!= Run</code>（<strong>枚举比较</strong>）。</li>
-<li>Run 态播 <strong>Sprint</strong> 序列，并勾<strong>循环动画</strong>。</li>
-</ol>
-<h2>第五步：添加 Run 节点，和 Move 节点拉出双向的线</h2>
-<p><a class="img-link" href="assets/img/l08-add-run-state.png" target="_blank" rel="noopener"><img src="assets/img/l08-add-run-state.png" alt="添加 Run 双向连线" loading="lazy"></a></p>
-<h2>第六步：双向线箭头配置（转换规则）</h2>
-<p>双击两个状态之间的小箭头，进入**转换规则（Transition Rule）**编辑——它是状态机里连在两个状态之间的那条线，条件满足时角色才从源状态切到目标状态。</p>
-<p><strong>从 Move 向 Run</strong>：当 <code>E Player State == Run</code> 时，调用跑步动画。注意搜「等于」时要选<strong>等于（枚举）</strong>，不要用数值的等于。</p>
-<p><a class="img-link" href="assets/img/l08-transition-move-to-run.png" target="_blank" rel="noopener"><img src="assets/img/l08-transition-move-to-run.png" alt="Move→Run 条件" loading="lazy"></a></p>
-<p><strong>从 Run 向 Move</strong>：当 <code>E Player State != Run</code> 时，回到 Move（Walk / Idle / Aim 都走这条回来）。搜「不等于」要用英文输入法敲 <code>!</code>，中文 <code>！</code> 搜不到。</p>
-<p><a class="img-link" href="assets/img/l08-transition-run-to-move.png" target="_blank" rel="noopener"><img src="assets/img/l08-transition-run-to-move.png" alt="Run→Move 条件" loading="lazy"></a></p>
-<h2>第七步：Run 节点配置</h2>
-<p>进入 Run 状态，资产浏览器搜 <strong><code>sprint</code></strong>（不要搜 <code>run</code>——序列名是 Sprint），拉出对应动画接输出姿势。<strong>注意检查循环播放按钮是否勾选</strong>，最后点击编译。</p>
+<h2>五、状态机骨架：Move 态</h2>
+<p><strong>State Machine 节点</strong>（命名为 Basic）：一个「动画状态机」容器，内部放多个状态 + 转换规则，对外输出最终 Pose。<strong>Output Pose</strong> 是 AnimGraph 的最终出口，连进去的 Pose 就是角色实际播放的动画。</p>
+<p>连线：State Machine → Output Pose，意思是「动画蓝图最终输出状态机算出来的结果」。</p>
+<p><a class="img-link" href="assets/img/l07-animgraph-statemachine.png" target="_blank" rel="noopener"><img src="assets/img/l07-animgraph-statemachine.png" alt="状态机连 Output Pose" loading="lazy"></a></p>
+<p>双击状态机进入内部画布。**Entry（入口节点）**是状态机的起点，从 Entry 拖白线连到 <strong>Move</strong> 状态：表示默认进入 Move。只有一个状态时，右上角会提示 <code>Move 100.0%</code>（满权重激活）。</p>
+<p><a class="img-link" href="assets/img/l07-statemachine-entry-move.png" target="_blank" rel="noopener"><img src="assets/img/l07-statemachine-entry-move.png" alt="Entry 连 Move" loading="lazy"></a></p>
+<hr>
+<h2>六、各状态内部配置</h2>
+<h3>1. Move 态：播混合空间</h3>
+<p>双击 Move 状态，里面是另一个小 AnimGraph。右键拖出 <strong>BlendSpace Player</strong>，选资产 <code>BS_FPSPlayer</code>：</p>
+<ul>
+<li>变量 <strong>Move Y</strong> 接混合空间的 <strong>Right</strong>（左右轴）</li>
+<li>变量 <strong>Move X</strong> 接 <strong>Forward</strong>（前后轴）</li>
+<li>BlendSpace 输出 → <strong>Output Animation Pose</strong>（这个状态自己的 Pose 出口）</li>
+</ul>
+<p><a class="img-link" href="assets/img/l07-move-state-blendspace.png" target="_blank" rel="noopener"><img src="assets/img/l07-move-state-blendspace.png" alt="Move 内 BlendSpace" loading="lazy"></a></p>
+<p><strong>作用</strong>：角色按 W/S 时 Move X 变，A/D 时 Move Y 变，混合空间就在这两轴上混合 Idle/前走/后走/左走/右走，实现八方向移动。</p>
+<p>接完在 Move 节点内部点击编译：</p>
+<p><a class="img-link" href="assets/img/l07-move-state-compile.png" target="_blank" rel="noopener"><img src="assets/img/l07-move-state-compile.png" alt="编译" loading="lazy"></a></p>
+<h3>2. Run 态：播 Sprint 序列</h3>
+<p>进入 Run 状态，资产浏览器搜 <strong><code>sprint</code></strong>（不要搜 <code>run</code>——序列名是 Sprint），拉出动画接输出姿势。<strong>勾选循环播放</strong>，最后点击编译。</p>
 <p><a class="img-link" href="assets/img/l08-run-state-animation.png" target="_blank" rel="noopener"><img src="assets/img/l08-run-state-animation.png" alt="Run 节点动画" loading="lazy"></a></p>
-<blockquote>
-<p>枪械 <code>ABP_VIRTUL</code> 的状态机做同样一套：加 Run、双向过渡、同样的枚举条件、Weapon Sprint + 循环。</p>
-<p>进阶：若切跑/停跑太「硬」，可在状态机里框选两条过渡，Details → 混合设置调<strong>混合时长</strong>（课例 0.3 秒）；手臂与枪要用同一套时长和曲线，否则穿模。</p>
-</blockquote>
-<hr>
-<h1>（下）加 Aim 状态与过渡动画</h1>
-<p>承接 Move / Run；本课做<strong>瞄准（Aim）</strong>：先简版直切，再加 <strong>ToAim / ToIdle</strong> 过渡动画，并处理狂按右键、松瞄立刻奔跑。</p>
-<h2>第八步（方法一）：Aim 节点与 Move 直切双向线</h2>
-<p>添加 Aim 节点，和 Move 节点拉出双向的线——先用引擎自行合成的过渡（混合时长硬插值）。</p>
-<p><strong>从 Move 向 Aim</strong>：<code>E Player State == Aim</code> 时调用瞄准动画。</p>
-<p><a class="img-link" href="assets/img/l09-transition-move-to-aim.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-move-to-aim.png" alt="Move→Aim" loading="lazy"></a></p>
-<p><strong>从 Aim 向 Move</strong>：<code>E Player State != Aim</code> 时回 Move。</p>
-<p><a class="img-link" href="assets/img/l09-transition-aim-to-move.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-aim-to-move.png" alt="Aim→Move" loading="lazy"></a></p>
-<h2>第九步（方法二）：ToAim / ToIdle 过渡动画节点</h2>
-<p>引擎靠混合时长硬插值，拉长会又慢又僵。资源里已有 <code>Idle_to_ADS</code>（站立→瞄准）和 <code>ADS_to_Idle</code>（瞄准→站立）过渡序列，比自动合成自然得多。于是：<strong>删掉 Move↔Aim 直接边</strong>，在 Move 和 Aim 之间插入两个过渡状态，连上双向线：</p>
-<pre><code>Move ──► ToAim ──► Aim
- ▲                  │
- └──── ToIdle ◄─────┘
-</code></pre>
-<p><a class="img-link" href="assets/img/l09-statemachine-toaim-toidle.png" target="_blank" rel="noopener"><img src="assets/img/l09-statemachine-toaim-toidle.png" alt="ToAim/ToIdle 布局" loading="lazy"></a></p>
-<p><strong>ToAim 节点配置</strong>：播 <code>Idle_to_ADS</code>，<strong>不要勾循环</strong>（过渡动画只播一次）。</p>
-<p><a class="img-link" href="assets/img/l09-toaim-state.png" target="_blank" rel="noopener"><img src="assets/img/l09-toaim-state.png" alt="ToAim 节点" loading="lazy"></a></p>
-<p><strong>ToIdle 节点配置</strong>：播 <code>ADS_to_Idle</code>，同样不勾循环。</p>
-<p><a class="img-link" href="assets/img/l09-toidle-state.png" target="_blank" rel="noopener"><img src="assets/img/l09-toidle-state.png" alt="ToIdle 节点" loading="lazy"></a></p>
-<h2>转换规则逐条配置</h2>
-<p><strong>Move → ToAim</strong>：<code>E Player State == Aim</code>。</p>
-<p><a class="img-link" href="assets/img/l09-transition-move-toaim.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-move-toaim.png" alt="Move→ToAim" loading="lazy"></a></p>
-<p><strong>ToAim → Aim</strong>：<code>Get Relevant Anim Time Remaining (ToAim) &lt; 0.4</code>——过渡动画快播完（剩余不足 0.4 秒）才切入正式 Aim，保证过渡播完不跳切。</p>
-<p><a class="img-link" href="assets/img/l09-transition-toaim-aim.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-toaim-aim.png" alt="ToAim→Aim" loading="lazy"></a></p>
-<p><strong>Aim → ToIdle</strong>：<code>E Player State != Aim</code>。</p>
-<p><a class="img-link" href="assets/img/l09-transition-aim-toidle.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-aim-toidle.png" alt="Aim→ToIdle" loading="lazy"></a></p>
-<p><strong>ToIdle → Move</strong>：详见下方「转换规则详解」。</p>
-<p><a class="img-link" href="assets/img/l09-transition-toidle-move.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-toidle-move.png" alt="ToIdle→Move" loading="lazy"></a></p>
-<p><strong>ToAim → ToIdle</strong>（打断边）：<code>E Player State != Aim</code>——进瞄中途松键，立刻往回，不用把整段过渡播完。</p>
-<p><a class="img-link" href="assets/img/l09-transition-toaim-toidle.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-toaim-toidle.png" alt="ToAim→ToIdle" loading="lazy"></a></p>
-<p><strong>ToIdle → ToAim</strong>（打断边）：<code>E Player State == Aim</code>——出瞄中途再按，立刻再进瞄。</p>
-<p><a class="img-link" href="assets/img/l09-transition-toidle-toaim.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-toidle-toaim.png" alt="ToIdle→ToAim" loading="lazy"></a></p>
-<blockquote>
-<p>若没有这两条横边，快速按下/松开右键仍会把整段过渡播完，手感「不跟手」。</p>
-</blockquote>
-<h3>转换规则详解：ToIdle → Move（含 OR Run）</h3>
-<p>这条边的完整逻辑：</p>
-<pre><code>允许从 ToIdle 切到 Move = (ToIdle 动画剩余时间 &lt; 0.4)  或  (E Player State == Run)
-</code></pre>
-<table>
-<thead>
-<tr>
-<th align="left">节点</th>
-<th align="left">解释</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left"><strong>Get Relevant Anim Time Remaining (ToIdle)</strong>（绿色纯函数）</td>
-<td align="left">获取源状态（ToIdle）正在播的动画还剩多少时间。括号里的 <code>(ToIdle)</code> 指定检测的是「源状态」动画的进度</td>
-</tr>
-<tr>
-<td align="left"><strong><code>&lt; 0.4</code> 比较</strong>（红色布尔输出）</td>
-<td align="left">过渡动画快播完才允许切走，防止动画才播个开头就被打断</td>
-</tr>
-<tr>
-<td align="left"><strong>E Player State <code>== Run</code></strong>（枚举判断）</td>
-<td align="left">玩家当前是否在跑</td>
-</tr>
-<tr>
-<td align="left"><strong>OR</strong>（布尔或）</td>
-<td align="left">两个条件满足其一就放行</td>
-</tr>
-<tr>
-<td align="left"><strong>Result → Can Enter Transition</strong></td>
-<td align="left">最终结果决定是否允许切换</td>
-</tr>
-</tbody></table>
-<p><strong>为什么要 OR Run</strong>：松右键马上按跑步键时，角色状态早已是 Run，但动画会卡在 ToIdle 播完才走。加上 OR Run 后，跑步优先级高，强制立刻切换，不等动画——松瞄立刻 sprint 不卡。</p>
-<h2>第十步：Aim 节点配置（按速度混合 ADS Idle/Walk）</h2>
+<h3>3. Aim 态：按速度混合 ADS Idle / ADS Walk</h3>
 <p><a class="img-link" href="assets/img/l09-aim-state-config.png" target="_blank" rel="noopener"><img src="assets/img/l09-aim-state-config.png" alt="Aim 节点配置" loading="lazy"></a></p>
-<p>Aim 状态内部不播「一个」动画，而是<strong>根据角色实际移动速度，在 Idle（稳瞄）和 Walk（走瞄）之间平滑切换</strong>。相比纯状态机，这里用 <strong>Blend Poses by Bone（按骨骼混合）</strong> 节点做过渡，不会生硬跳切。</p>
-<h3>节点逐个解释（数据流从底到顶）</h3>
+<p>Aim 状态内部不播「一个」动画，而是<strong>根据角色实际移动速度，在 Idle（稳瞄）和 Walk（走瞄）之间平滑切换</strong>。这里用 <strong>Blend Poses by Bone（按骨骼混合）</strong> 节点做过渡，不会生硬跳切。</p>
+<h4>节点逐个解释（数据流从底到顶）</h4>
 <table>
 <thead>
 <tr>
@@ -261,15 +184,15 @@
 <td align="left">True Pose 接 Walk（在动时播）、False Pose 接 Idle（静止时播）、True/False Blend Time 各 <strong>0.1 秒</strong>、Active Value 接「速度 &gt; 0」的布尔。「by Bone」表示可指定某些骨骼用不同权重混合（默认全骨骼统一），高级用法可做「上身瞄准、下身走路」分层</td>
 </tr>
 <tr>
-<td align="left"><strong>两个 Animation Player</strong>（Walk / Idle）</td>
-<td align="left">直接引用 <code>.uasset</code> 动画资产，分别连 True / False Pose。<strong>记得勾选循环动画</strong></td>
+<td align="left"><strong>两个 Animation Player</strong>（ADS Walk / ADS Idle）</td>
+<td align="left">直接引用动画资产，分别连 True / False Pose。<strong>记得勾选循环动画</strong></td>
 </tr>
 <tr>
 <td align="left"><strong>Output Animation Pose</strong></td>
 <td align="left">这个状态的最终出口</td>
 </tr>
 </tbody></table>
-<h3>数据流全景</h3>
+<h4>数据流全景</h4>
 <pre><code>Character Movement (组件)
     ↓ (深蓝对象线)
 Velocity (取速度向量)
@@ -284,7 +207,7 @@ Blend Poses by Bone.Active Value
     ↓ (混合后的姿势)
 Output Animation Pose → 屏幕上的角色
 </code></pre>
-<h3>与 Event Graph 的分工（重要）</h3>
+<h4>与 Event Graph 的分工（重要）</h4>
 <table>
 <thead>
 <tr>
@@ -310,8 +233,121 @@ Output Animation Pose → 屏幕上的角色
 <li>松开按键但惯性滑行 → 输入无、速度 &gt; 0 → 逻辑说 Idle，视觉播 Walk（✅ 对）</li>
 </ul>
 <p><strong>结论</strong>：Event Graph 管逻辑状态，AnimGraph 管视觉表现，各管各的。</p>
+<h3>4. ToAim / ToIdle 态：播过渡序列（不循环）</h3>
+<p>资源包里自带 <code>Idle_to_ADS</code>（站立→瞄准）和 <code>ADS_to_Idle</code>（瞄准→站立）过渡序列，比引擎自动合成的过渡自然得多，所以 Aim 的进出不靠「混合时长」硬插值，而是专门加两个过渡状态：</p>
+<p><strong>ToAim 节点配置</strong>：播 <code>Idle_to_ADS</code>，<strong>不要勾循环</strong>（过渡动画只播一次）。</p>
+<p><a class="img-link" href="assets/img/l09-toaim-state.png" target="_blank" rel="noopener"><img src="assets/img/l09-toaim-state.png" alt="ToAim 节点" loading="lazy"></a></p>
+<p><strong>ToIdle 节点配置</strong>：播 <code>ADS_to_Idle</code>，同样不勾循环。</p>
+<p><a class="img-link" href="assets/img/l09-toidle-state.png" target="_blank" rel="noopener"><img src="assets/img/l09-toidle-state.png" alt="ToIdle 节点" loading="lazy"></a></p>
+<hr>
+<h2>七、状态之间的转换规则</h2>
+<p>双击两个状态之间的小箭头，进入**转换规则（Transition Rule）**编辑——它是状态机里连在两个状态之间的那条线，条件满足时角色才从源状态切到目标状态，最终结果接 <strong>Can Enter Transition</strong>。</p>
+<p>状态间的连线总览（Move ↔ Run 双向；Move → ToAim → Aim → ToIdle → Move 主环路；ToAim ↔ ToIdle 两条打断边）：</p>
+<p><a class="img-link" href="assets/img/l09-statemachine-toaim-toidle.png" target="_blank" rel="noopener"><img src="assets/img/l09-statemachine-toaim-toidle.png" alt="状态机布局" loading="lazy"></a></p>
+<h3>全部转换条件一览</h3>
+<table>
+<thead>
+<tr>
+<th align="left">边</th>
+<th align="left">条件</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Move → Run</td>
+<td align="left"><code>E Player State</code> <strong>== Run</strong></td>
+<td align="left">进入跑步</td>
+</tr>
+<tr>
+<td align="left">Run → Move</td>
+<td align="left"><code>E Player State</code> <strong>!= Run</strong></td>
+<td align="left">只要不是跑，就回 Move</td>
+</tr>
+<tr>
+<td align="left">Move → ToAim</td>
+<td align="left"><code>E Player State</code> <strong>== Aim</strong></td>
+<td align="left">按下瞄准，开始进瞄过渡</td>
+</tr>
+<tr>
+<td align="left">ToAim → Aim</td>
+<td align="left">剩余动画时间 <strong>&lt; 0.4</strong></td>
+<td align="left">过渡快播完才进正式瞄准</td>
+</tr>
+<tr>
+<td align="left">Aim → ToIdle</td>
+<td align="left"><code>E Player State</code> <strong>!= Aim</strong></td>
+<td align="left">松开瞄准，开始出瞄过渡</td>
+</tr>
+<tr>
+<td align="left">ToIdle → Move</td>
+<td align="left">剩余动画时间 <strong>&lt; 0.4</strong> <strong>OR</strong> <code>== Run</code></td>
+<td align="left">过渡播完回 Move；跑步则立刻切</td>
+</tr>
+<tr>
+<td align="left">ToAim → ToIdle</td>
+<td align="left"><code>E Player State</code> <strong>!= Aim</strong></td>
+<td align="left">打断边：进瞄中途松键，立刻往回</td>
+</tr>
+<tr>
+<td align="left">ToIdle → ToAim</td>
+<td align="left"><code>E Player State</code> <strong>== Aim</strong></td>
+<td align="left">打断边：出瞄中途再按，立刻再进瞄</td>
+</tr>
+</tbody></table>
+<p><strong>配置要点</strong>：</p>
+<ul>
+<li>枚举比较要搜「等于」时选<strong>等于（枚举）</strong>，不要用数值的等于；搜「不等于」要用英文输入法敲 <code>!</code>，中文 <code>！</code> 搜不到</li>
+<li>「剩余动画时间」节点是 <strong>Get Relevant Anim Time Remaining</strong>（剩余秒数）；0.4 可微调，更大则更早切走</li>
+</ul>
+<p>逐条截图：</p>
+<p><a class="img-link" href="assets/img/l08-transition-move-to-run.png" target="_blank" rel="noopener"><img src="assets/img/l08-transition-move-to-run.png" alt="Move→Run" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l08-transition-run-to-move.png" target="_blank" rel="noopener"><img src="assets/img/l08-transition-run-to-move.png" alt="Run→Move" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l09-transition-move-toaim.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-move-toaim.png" alt="Move→ToAim" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l09-transition-toaim-aim.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-toaim-aim.png" alt="ToAim→Aim" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l09-transition-aim-toidle.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-aim-toidle.png" alt="Aim→ToIdle" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l09-transition-toidle-move.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-toidle-move.png" alt="ToIdle→Move" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l09-transition-toaim-toidle.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-toaim-toidle.png" alt="ToAim→ToIdle" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l09-transition-toidle-toaim.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-toidle-toaim.png" alt="ToIdle→ToAim" loading="lazy"></a></p>
+<h3>详解：ToIdle → Move 为什么要 OR Run</h3>
+<p>这条边的完整逻辑：</p>
+<pre><code>允许从 ToIdle 切到 Move = (ToIdle 动画剩余时间 &lt; 0.4)  或  (E Player State == Run)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th align="left">节点</th>
+<th align="left">解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Get Relevant Anim Time Remaining (ToIdle)</strong>（绿色纯函数）</td>
+<td align="left">获取源状态（ToIdle）正在播的动画还剩多少时间。括号里的 <code>(ToIdle)</code> 指定检测的是「源状态」动画的进度</td>
+</tr>
+<tr>
+<td align="left"><strong><code>&lt; 0.4</code> 比较</strong>（红色布尔输出）</td>
+<td align="left">过渡动画快播完才允许切走，防止动画才播个开头就被打断</td>
+</tr>
+<tr>
+<td align="left"><strong>E Player State <code>== Run</code></strong>（枚举判断）</td>
+<td align="left">玩家当前是否在跑</td>
+</tr>
+<tr>
+<td align="left"><strong>OR</strong>（布尔或）</td>
+<td align="left">两个条件满足其一就放行</td>
+</tr>
+</tbody></table>
+<p><strong>为什么要 OR Run</strong>：松右键马上按跑步键时，角色状态早已是 Run，但动画会卡在 ToIdle 播完才走。加上 OR Run 后，跑步优先级高，强制立刻切换，不等动画——松瞄立刻 sprint 不卡。</p>
+<h3>详解：两条打断边</h3>
+<p>若没有 ToAim ↔ ToIdle 这两条横边，快速按下/松开右键仍会把整段过渡播完，手感「不跟手」。有了它们，进瞄中途松键立刻往回，出瞄中途再按立刻再进瞄。</p>
+<h3>补充：Move ↔ Aim 的简版直切（已被过渡方案替代）</h3>
+<p>加过渡状态之前，Aim 是和 Move 直接双向连线的（<code>== Aim</code> / <code>!= Aim</code>），靠引擎按混合时长硬插值过渡——拉长到 0.5 秒会又慢又僵，所以最终改成了上面的 ToAim/ToIdle 方案。这两张图仅作对照记录：</p>
+<p><a class="img-link" href="assets/img/l09-transition-move-to-aim.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-move-to-aim.png" alt="Move→Aim（简版）" loading="lazy"></a></p>
+<p><a class="img-link" href="assets/img/l09-transition-aim-to-move.png" target="_blank" rel="noopener"><img src="assets/img/l09-transition-aim-to-move.png" alt="Aim→Move（简版）" loading="lazy"></a></p>
+<hr>
+<h2>八、枪械侧同步做一套</h2>
+<p>枪械 <code>ABP_VIRTUL</code> 的状态机与人物完全一致：同样的 5 个状态、同样的转换条件、Weapon 系列动画（Sprint / ADS 等）、同样的循环勾选。<strong>两边都要改完再狂按瞄准验证</strong>——只做手臂、漏枪，或两边平滑时间/过渡时长不一致，都会穿模。</p>
 <blockquote>
-<p>枪械 <code>ABP_VIRTUL</code> 的 AnimGraph 与人物同理，注意连线，否则会出现动画不生效的问题。</p>
+<p>进阶：若切跑/停跑太「硬」，可在状态机里框选两条过渡，Details → 混合设置调<strong>混合时长</strong>（课例 0.3 秒）；手臂与枪要用同一套时长和曲线。</p>
 </blockquote>
 <hr>
 <h2>易错点速查</h2>
