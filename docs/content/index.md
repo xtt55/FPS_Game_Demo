@@ -17,7 +17,7 @@
 <a class="lesson-card" href="lesson-06.html"><div class="n">第06课</div><div class="t">制作角色能力系统</div></a>
 <a class="lesson-card" href="lesson-07-09.html"><div class="n">第07–09课</div><div class="t">制作动画系统（上/中/下）</div></a>
 <a class="lesson-card" href="lesson-10.html"><div class="n">第10课</div><div class="t">模块化设计及DeBug</div></a>
-<a class="lesson-card" href="lesson-11.html"><div class="n">第11课</div><div class="t">完善瞄准系统（上）</div></a>
+<a class="lesson-card" href="lesson-11.html"><div class="n">第11-12课</div><div class="t">完善瞄准系统（上/下）</div></a>
 </div>
 
 ## 附录（回查工具）

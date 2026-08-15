@@ -1,7 +1,7 @@
 # 站点构建进度（供中断后接手）
 
 > 本文件记录 UE5 FPS 学习笔记静态站的构建进度与关键决策。随时更新。
-> 最新更新：2026-08-09 三次更新（蓝图创建步骤补全 + ABP_Virtus 命名统一）。
+> 最新更新：2026-08-09 四次更新（合并第 12 课「完善瞄准系统（下）」到 11-12 页）。
 
 ## 目标
 
@@ -63,6 +63,13 @@
 - 补蓝图创建步骤：03 课开头加「创建 BP_FPS_Player」（父类=角色 Character，位置 `Scripts/Players`）；07-09 课开头加「创建动画蓝图与混合空间」（位置 `Scripts/Players/Animation/{Players,Weapon}`）
 - 修正资产位置：GameMode 在 `Scripts/Players/System`，输入资产在 `Scripts/Players/System/Input`（均与工程 .uasset 路径核对过）
 - 骨骼选择已用二进制校验（`docs/build/check-skeletons.mjs`）：人物侧=`Skeleton_Base`，枪械侧=`MCX-VIRTUS_Skeleton`；术语表补「命名前缀」和 Skeleton vs Skeletal Mesh 区分
+
+## 2026-08-09 四次更新
+
+- 合并第 12 课「完善瞄准系统（下）」到第 11 页：文件名保持 `11.md` / `lesson-11.html`，标题改为「第11-12课 · 完善瞄准系统（上/下）」
+- 新增第 12 课截图 8 张并更新 `copy-images.mjs` 映射；copy 校验 84/84
+- 11-12 页内容：Step 8 加 `Sight` 机瞄组件；Step 9 修复动态模糊拉长准星（`After Motion Blur`）；Step 10 FOV 平滑缩放（105→75，FInterp To + Set Timer By Event + OutFOV）；Step 11 `UpdateDefaultFOV` 存默认 FOV 变量
+- 站点页脚、PAGES、index 首页卡片、AGENTS.md 的 `EPlayerState` 命名同步更新
 
 ## 待办（全部完成 ✅）
 

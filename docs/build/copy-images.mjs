@@ -83,10 +83,10 @@ const MAP = {
   '枪托.png': 'l10-virtus-stock.png',
   'image-52.png': 'l10-virtus-nocollision.png',
   'image-53.png': 'l10-spawnweapon-function.png',
-  'image-56.png': 'l10-abp-virtul-eventgraph-refactored.png',
-  'image-55.png': 'l10-abp-virtul-compare-1.png',
-  'image-29.png': 'l10-abp-virtul-compare-2.png',
-  'image-30.png': 'l10-abp-virtul-animgraph.png',
+  'image-56.png': 'l10-abp-virtus-eventgraph-refactored.png',
+  'image-55.png': 'l10-abp-virtus-compare-1.png',
+  'image-29.png': 'l10-abp-virtus-compare-2.png',
+  'image-30.png': 'l10-abp-virtus-animgraph.png',
   // 第11课 瞄准系统（上）
   'image-58.png': 'l11-virtus-open-skeleton.png',
   'image-57.png': 'l11-aimsocket-create.png',
@@ -95,6 +95,16 @@ const MAP = {
   'image-61.png': 'l11-abp-eventgraph-aimsocket.png',
   'image-63.png': 'l11-abp-animgraph-headaim.png',
   'image-62.png': 'l11-modify-bone-config.png',
+
+  // 第12课 完善瞄准系统（下）
+  'image-64.png': 'l12-virtus-add-sight.png',
+  'image-65.png': 'l12-scope-reticle-material.png',
+  'image-66.png': 'l12-holographic-parent-material.png',
+  'image-67.png': 'l12-motion-blur-after.png',
+  'image-68.png': 'l12-camera-fov-default.png',
+  'image-69.png': 'l12-aim-fov-eventgraph.png',
+  'image-70.png': 'l12-updatedefaultfov-call.png',
+  'image-71.png': 'l12-updatedefaultfov-function.png',
 };
 
 fs.mkdirSync(DEST, { recursive: true });

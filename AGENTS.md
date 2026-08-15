@@ -24,7 +24,7 @@ UE 5.8 第一人称射击学习工程（蓝图，无 C++），跟随 B 站教程
 - `ABP_FPSPlayer` = 人物动画蓝图（权威数据源）；`ABP_Virtus` = 枪械动画蓝图（读人物 ABP 变量，不直接 Cast 角色）
 - `BP_WeaponBase` 是枪械基类（通用函数如 getAimSocketLocation 写这里）；`BP_VIRTUS` 继承它
 - Cast 链只在 `Event BlueprintInitializeAnimation` 跑一次并缓存；每帧 Update 零 Cast
-- `EPlayerState`：Idle / Walk / Run / Aim，由 `UpdatePlayerState` 计算
+- `E_PlayerState`：Idle / Walk / Run / Aim，由 `UpdatePlayerState` 计算
 
 ## 工作规则
 

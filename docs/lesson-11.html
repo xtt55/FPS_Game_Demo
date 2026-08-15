@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>第11课 · 完善瞄准系统（上） · UE5 FPS 学习笔记</title>
+<title>第11-12课 · 完善瞄准系统（上/下） · UE5 FPS 学习笔记</title>
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -23,7 +23,7 @@
 <a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
 <a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
 <a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
-<a class="nav-link active" href="lesson-11.html">11 完善瞄准系统（上）</a>
+<a class="nav-link active" href="lesson-11.html">11-12 完善瞄准系统</a>
 <a class="nav-link" href="appendix-nodes.html">附录一 · 通用节点速查</a>
 <a class="nav-link" href="appendix-troubleshooting.html">附录二 · 踩坑速查</a>
 <a class="nav-link" href="appendix-architecture.html">附录三 · 数据流全景</a>
@@ -33,15 +33,26 @@
 <a class="nav-link" href="appendix-principles.html">附录七 · 设计原则</a>
   </nav>
   <main class="content">
-    <h1 class="page-title">第11课 · 完善瞄准系统（上）</h1>
-    <a class="video-link" href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=12" target="_blank" rel="noopener">▶ 对应视频（P12）</a>
-    <h2>本课要解决什么</h2>
+    <h1 class="page-title">第11-12课 · 完善瞄准系统（上/下）</h1>
+    <a class="video-link" href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=13" target="_blank" rel="noopener">▶ 对应视频（P13）</a>
+    <blockquote>
+<p>对应视频：<a href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=12">P12</a>（第 11 课·上）、<a href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=13">P13</a>（第 12 课·下）。两课内容合并成一页。</p>
+</blockquote>
+<h2>本课要解决什么</h2>
+<h3>上：头部平移瞄准</h3>
 <ol>
 <li>在枪骨骼 <code>body</code> 上加 <strong>AimSocket</strong> 插槽，定位瞄准时头部应凑到的位置。</li>
 <li>父类 <code>BP_WeaponBase</code> 提供 <code>getAimSocketLocation</code> 函数（子类自动继承）。</li>
 <li>角色 <code>SpawnWeapon</code> 缓存 <code>Weapon</code> 引用；人物 ABP 每帧取插槽位置。</li>
 <li>AnimGraph：缓存 Basic 姿势 → 按 <code>E_PlayerState</code> 混合；Aim 时用 <strong>Transform (Modify) Bone</strong> 把 Head 移到插槽。</li>
 <li>Debug：ABP 初始化早于武器生成，<code>Weapon</code> 可能为空 → 用 <strong>Is Valid</strong> 护住。</li>
+</ol>
+<h3>下：机瞄 + 准星 + FOV 过渡</h3>
+<ol start="6">
+<li>在 <code>BP_VIRTUS</code> 里加 <strong>Sight</strong> 机瞄组件，让枪械有近距离瞄具。</li>
+<li>修复全息瞄准镜准星在快速移动时被<strong>动态模糊</strong>拉成长条。</li>
+<li>瞄准时摄像机 FOV 从默认 <code>105</code> 平滑缩到 <code>75</code>，松开右键时平滑恢复。</li>
+<li>把默认 FOV 存成变量 <strong><code>DefaultFOV</code></strong>，开局调用 <code>UpdateDefaultFOV</code> 初始化。</li>
 </ol>
 <hr>
 <h2>第一步：在枪骨骼上加 AimSocket</h2>
@@ -179,6 +190,133 @@ Use cached pose &#39;Basic&#39;         ↓
 <li><strong>过渡平滑</strong>——0.2 秒 Blend 时间让探头/缩头很自然。</li>
 </ol>
 <hr>
+<h2>第七步：给枪加机瞄 Sight</h2>
+<p>在 <code>BP_VIRTUS</code> 的组件树中新增一个 <strong>Static Mesh</strong> 组件，命名为 <code>Sight</code>，放到 <code>Weapon</code> 下合适的位置（常在 <code>Scope</code> 与 <code>Stock</code> 之间）。为该组件指定铁瞄 / 备用瞄具模型，并挂到对应插槽上。</p>
+<p><a class="img-link" href="assets/img/l12-virtus-add-sight.png" target="_blank" rel="noopener"><img src="assets/img/l12-virtus-add-sight.png" alt="BP_VIRTUS 新增 Sight 组件" loading="lazy"></a></p>
+<blockquote>
+<p>注意：这是枪械的<strong>额外瞄具</strong>，和下面的 <code>Scope</code>（全息镜）是两套东西。<code>Sight</code> 用于近距离机瞄；<code>Scope</code> 上的准星问题是下一步要修的。</p>
+</blockquote>
+<hr>
+<h2>第八步：修复快速移动时准星被拉成长条</h2>
+<p>全息镜的中间准星用的是一张发光贴图（准星纹理）。在快速移动时，场景被引擎加了<strong>动态模糊（Motion Blur）</strong>，半透明材质也会跟着一起模糊，导致准星变成一条长矩形。</p>
+<h3>1. 打开全息镜材质</h3>
+<p>选中 <code>Scope</code> 组件 → 找到其材质槽里带准星的元素（通常元素编号旁会显示 <code>M_Holographic_Inst6</code> 之类的实例材质）→ 双击进入。</p>
+<p><a class="img-link" href="assets/img/l12-scope-reticle-material.png" target="_blank" rel="noopener"><img src="assets/img/l12-scope-reticle-material.png" alt="进入 Scope 准星材质" loading="lazy"></a></p>
+<p>在材质实例里看到它的父项是 <code>M_Holographic</code>，继续双击父项进入基础材质。</p>
+<p><a class="img-link" href="assets/img/l12-holographic-parent-material.png" target="_blank" rel="noopener"><img src="assets/img/l12-holographic-parent-material.png" alt="材质的父项 M_Holographic" loading="lazy"></a></p>
+<h3>2. 改半透明通道为“动态模糊后”</h3>
+<p>在材质图表左侧的**细节（Details）**面板里：</p>
+<ul>
+<li>确认<strong>混合模式 / 着色模型</strong>是<strong>半透明（Translucent）</strong>（准星要透光 / 叠加显示）</li>
+<li>展开**高级（Advanced）**分组</li>
+<li>找到半透明相关的通道设置，把它改成 <strong><code>After Motion Blur</code></strong>（中文显示为 <strong>“动态模糊后”</strong>）</li>
+</ul>
+<p><a class="img-link" href="assets/img/l12-motion-blur-after.png" target="_blank" rel="noopener"><img src="assets/img/l12-motion-blur-after.png" alt="半透明通道改为 After Motion Blur" loading="lazy"></a></p>
+<h3>为什么这样改</h3>
+<p>引擎默认会把半透明物体也纳入动态模糊计算。<code>After Motion Blur</code> 的意思是：<strong>先对整个场景做完整动态模糊，最后再渲染这个材质</strong>。这样准星就不会被拉长，而是始终清晰。</p>
+<hr>
+<h2>第九步：瞄准时摄像机 FOV 平滑缩放</h2>
+<h3>基础概念：FOV</h3>
+<p><strong>FOV = Field of View（视场 / 视野）</strong>，数值越小画面越窄、像望远镜 / 瞄具拉近；数值越大画面越广、有速度感。</p>
+<p>本项目默认值：<strong><code>105</code></strong>（广角，日常 / 跑步时带感）；瞄准时缩到：<strong><code>75</code></strong>（收窄，更聚焦）。</p>
+<p><a class="img-link" href="assets/img/l12-camera-fov-default.png" target="_blank" rel="noopener"><img src="assets/img/l12-camera-fov-default.png" alt="Camera 默认 FOV = 105" loading="lazy"></a></p>
+<h3>实现位置</h3>
+<p>整个 FOV 过渡写在 <strong><code>BP_FPS_Player</code> 的事件图表</strong>里，起点是 <strong><code>Enhanced Input Action IA_Aim</code></strong>（不是 <code>Update Animation</code> 之类的每帧事件）。</p>
+<p><a class="img-link" href="assets/img/l12-aim-fov-eventgraph.png" target="_blank" rel="noopener"><img src="assets/img/l12-aim-fov-eventgraph.png" alt="FOV 过渡完整链路" loading="lazy"></a></p>
+<h3>三条链路，逐个解释</h3>
+<h4>链路 1：按住右键 → 平滑拉近到 75</h4>
+<pre><code>IA_Aim.Triggered
+  ↓
+SET Want To Aim = true（顶部，带 ✓）
+  ↓
+Get World Delta Seconds（绿 float，帧间隔）
+  ↓                              ↘
+Camera                         FInterp To
+  ↓                                ├ Current    = Get Field Of View(Camera)
+Set Field Of View                │ Target     = 75
+  ├ Target = Camera              │ DeltaTime  = Get World Delta Seconds
+  └ Value  = FInterp To 输出 ────┘ Interp Speed = 8
+  ↓
+Clear and Invalidate Timer by Handle（清掉恢复定时器）
+</code></pre>
+<ul>
+<li><strong>FInterp To</strong>：每帧把 <code>Camera.FOV</code> 从当前值向 <code>75</code> 逼近；<code>Interp Speed = 8</code>，越大过渡越快。</li>
+<li><strong>Clear and Invalidate Timer by Handle</strong>：把链路 2/3 启动的“恢复 FOV 定时器”停掉，防止按下瞄准时新旧两个过渡互相打架。</li>
+</ul>
+<h4>链路 2：松开右键 → 启动恢复定时器</h4>
+<pre><code>IA_Aim.Completed
+  ↓
+SET Want To Aim = false（底部，无 ✓）
+  ↓
+Set Timer By Event
+  ├ Event        = OutFOV（自定义事件，见链路 3）
+  ├ Time         = Get World Delta Seconds（≈ 每帧触发一次）
+  ├ Looping      = ✅ 勾选
+  └ Return Value = Handle（存成变量 OutFOVHandle，供后面停止用）
+</code></pre>
+<h4>链路 3：自定义事件 OutFOV → 平滑恢复到默认 FOV</h4>
+<pre><code>OutFOV（自定义事件）
+  ↓
+Get World Delta Seconds
+  ↓                              ↘
+Camera                          FInterp To
+  ↓                                ├ Current    = Get Field Of View(Camera)
+Set Field Of View                │ Target     = DefaultFOV（变量 = 105）
+  ├ Target = Camera              │ DeltaTime  = Get World Delta Seconds
+  └ Value  = FInterp To 输出 ────┘ Interp Speed = 8
+  ↓
+Nearly Equal (Float)
+  ↓（A = 当前 FOV，B = DefaultFOV，Error Tolerance = 0.1）
+Branch
+  ├ True  → Clear and Invalidate Timer by Handle（已恢复，停定时器）
+  └ False → 下帧定时器继续触发 OutFOV
+</code></pre>
+<ul>
+<li><strong>Nearly Equal</strong>：判断当前 FOV 与默认 <code>105</code> 的差值是否小于 <code>0.1</code>，到了就停止，省得无限跑。</li>
+<li><strong>DefaultFOV</strong> 是下一节（第十步）才存的变量，这里先当已知值 <code>105</code> 看。</li>
+</ul>
+<h3>关键常量确认表</h3>
+<table>
+<thead>
+<tr>
+<th align="left">参数</th>
+<th align="left">值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">瞄准时 FOV 目标</td>
+<td align="left"><strong>75</strong></td>
+</tr>
+<tr>
+<td align="left">默认 FOV</td>
+<td align="left"><strong>105</strong></td>
+</tr>
+<tr>
+<td align="left">两条链的 <code>FInterp To.Interp Speed</code></td>
+<td align="left"><strong>8</strong></td>
+</tr>
+<tr>
+<td align="left"><code>Set Timer By Event.Time</code></td>
+<td align="left"><code>Get World Delta Seconds</code></td>
+</tr>
+<tr>
+<td align="left"><code>Nearly Equal.Error Tolerance</code></td>
+<td align="left"><strong>0.1</strong></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>第十步：把默认 FOV 存成变量</h2>
+<p>让恢复链路能读到“当前默认 FOV”，不要把 <code>105</code> 写死，所以建一个变量 <code>DefaultFOV</code>，开局时从摄像机的 <code>Field Of View</code> 里读一次。</p>
+<h3>1. 新建 UpdateDefaultFOV 函数</h3>
+<p><a class="img-link" href="assets/img/l12-updatedefaultfov-function.png" target="_blank" rel="noopener"><img src="assets/img/l12-updatedefaultfov-function.png" alt="UpdateDefaultFOV 函数体" loading="lazy"></a></p>
+<ul>
+<li>函数内：<code>Camera</code> → <strong>Get Field of View</strong> → <code>SET DefaultFOV</code></li>
+<li>这个函数只负责一件事：把摄像机的当前 FOV 复制到变量 <code>DefaultFOV</code></li>
+</ul>
+<h3>2. 在 Event BeginPlay 里调用</h3>
+<p><a class="img-link" href="assets/img/l12-updatedefaultfov-call.png" target="_blank" rel="noopener"><img src="assets/img/l12-updatedefaultfov-call.png" alt="BeginPlay 调用 UpdateDefaultFOV" loading="lazy"></a></p>
+<p>在 <code>Event BeginPlay</code> 链的末尾接上 <strong><code>UpdateDefaultFOV</code></strong>（常在 <code>Add Mapping Context</code> 和 <code>SpawnWeapon</code> 之后）。游戏开始时摄像机已经按场景配置好了 FOV，执行一次即可得到默认值。</p>
+<hr>
 <h2>易错点速查</h2>
 <ol>
 <li>插槽名拼错 → Get Socket Location 退回组件原点，头会漂。</li>
@@ -188,9 +326,14 @@ Use cached pose &#39;Basic&#39;         ↓
 <li>Spawn 后未缓存 <code>Weapon</code> / ABP 未 <code>Is Valid</code> → 运行时报空（Accessed None）。</li>
 <li>忘了给枚举混合加 <strong>Aim</strong> 姿势脚，或 Aim 支路没接 Modify Bone。</li>
 <li>以为 <code>Local To Component</code> / <code>Component To Local</code> 要手工添加——它们是引擎连线时自动插入的。</li>
+<li>第七步给枪加 <code>Sight</code> 时和 <code>Scope</code> 混淆，挂到错误插槽 → 模型位置不对。</li>
+<li>第八步修复准星只改了材质实例、没改父项材质 → 重新进游戏还是会被动态模糊拉长。</li>
+<li>第九步 FOV 过渡没清掉恢复定时器 → 按住瞄准时和恢复链路“打架”，FOV 抖动。</li>
+<li>第九步 <code>Set Timer By Event</code> 没勾选 <strong>Looping</strong>，或没存 Handle → 恢复 FOV 只执行一帧。</li>
+<li>第十步 <code>DefaultFOV</code> 写死成 <code>105</code> 而不调用 <code>UpdateDefaultFOV</code> → 以后改摄像机 FOV 时恢复值会错。</li>
 </ol>
 <h2>下节预告</h2>
-<p>第 12 课：完善瞄准系统（下）——修快速移动时准星被拉成长条；瞄准时加放大倍率。</p>
+<p>第 13 课：开火逻辑（制作开火蒙太奇动画、音效与特效）。</p>
 
     
     <div class="pager">
@@ -199,7 +342,7 @@ Use cached pose &#39;Basic&#39;         ↓
     </div>
   </main>
 </div>
-<footer class="footer">跟课进度：第 11 课 · 笔记持续更新中</footer>
+<footer class="footer">跟课进度：第 12 课 · 笔记持续更新中</footer>
 <script>
 document.getElementById('menu-btn').addEventListener('click', function () {
   document.getElementById('sidebar').classList.toggle('open');
