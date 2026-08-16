@@ -80,3 +80,62 @@ ABP_FPSPlayer（手臂）        ABP_Virtus（枪械，读人物 ABP 变量）
    ▼                            ▼
 BS_FPSPlayer（人物混合空间）   BS_Virtus（枪械混合空间，参数与人物一致）
 ```
+
+---
+
+## 六、FOV 与灵敏度链路（第 12–13 课）
+
+### 6.1 鼠标灵敏度链路
+
+```
+鼠标 / 手柄
+   │
+   ▼
+EnhancedInputAction IA_Look（Vector2D）
+   │
+   ▼
+Break Vector2D → X 分量 / Y 分量
+   │
+   ├─ MouseSensitivity（变量，默认 0.7）
+   └─ OutSensitivity = UpdateScoreSensitivity(E_PlayerState)
+                          └ Idle=1.0 / Walk=1.0 / Run=1.0 / Aim=0.4
+   │
+   ▼（三个值相乘）
+X × MouseSensitivity × OutSensitivity → Add Controller Yaw Input   （左右）
+Y × MouseSensitivity × OutSensitivity → Add Controller Pitch Input （上下）
+```
+
+**关键规则**：
+
+- `MouseSensitivity` 是**全局基础灵敏度**；`OutSensitivity` 是**按状态变化的倍率**。
+- 纯函数 `UpdateScoreSensitivity` 只读状态、返回倍率，**没有执行引脚**。
+- 瞄准时有效灵敏度 = `0.7 × 0.4 = 0.28`，镜头明显变慢，更稳。
+
+### 6.2 瞄准 FOV 缩放链路
+
+```
+IA_Aim
+  │
+  ├─ Triggered（按下右键）
+  │     ├─ SET Want To Aim = true
+  │     ├─ FInterp To(Current=Camera.FOV, Target=75, Delta=GetWorldDeltaSeconds, Speed=8)
+  │     ├─ Set Field Of View（Camera）
+  │     └─ Clear and Invalidate Timer by Handle（防止和恢复链路打架）
+  │
+  └─ Completed（松开右键）
+        ├─ SET Want To Aim = false
+        └─ Set Timer By Event(Event=OutFOV, Time=GetWorldDeltaSeconds, Looping=✓, Handle=OutFOVHandle)
+
+OutFOV（自定义事件）
+  │
+  ├─ FInterp To(Current=Camera.FOV, Target=DefaultFOV, Delta=GetWorldDeltaSeconds, Speed=8)
+  ├─ Set Field Of View（Camera）
+  ├─ Nearly Equal(Current FOV, DefaultFOV, ErrorTolerance=0.1)
+  └─ Branch True → Clear and Invalidate Timer by Handle（Stop）
+```
+
+**关键规则**：
+
+- 按下时直接**清掉恢复定时器**，避免新旧过渡互相抢 `Camera.FOV`。
+- `DefaultFOV` 不硬编码，开局用 `UpdateDefaultFOV` 从 `Camera` 读取一次存变量。
+- `OutFOV` 用 `Nearly Equal` 判断到位后停定时器，省得无限跑。

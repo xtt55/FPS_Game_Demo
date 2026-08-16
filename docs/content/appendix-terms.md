@@ -13,6 +13,7 @@
 | `IA_` / `IMC_` | 输入操作 / 输入映射上下文 | `IA_Move`、`IMC_FPS_Input` |
 | `E_` | 枚举（Enumeration） | `E_PlayerState` |
 | `SK_` | 骨骼网格体（Skeletal Mesh，素材包资产） | `SK_MCX-VIRTUS` |
+| `M_` | 材质（Material） | `M_Holographic`（第 12 课全息瞄具准星材质） |
 
 ## ⚠️ 踩过坑的翻译
 
@@ -33,6 +34,7 @@
 | Triggered | 触发中 | 键按住期间持续触发 |
 | Completed | 已完成 | 键抬起时触发一次 |
 | Enhanced Input Local Player Subsystem | 增强输入本地玩家子系统 | 增强输入的入口，Add Mapping Context 从这拿 |
+| Sensitivity | 灵敏度 | 鼠标 / 视角输入的缩放系数；第 13 课 `MouseSensitivity × OutSensitivity` |
 
 ## 框架与对象
 
@@ -48,6 +50,11 @@
 | Skeleton | 骨骼 | 骨架数据资产（如 `Skeleton_Base`、`MCX-VIRTUS_Skeleton`）；**创建动画蓝图/混合空间时选的是它** |
 | Skeletal Mesh | 骨骼网格体 | 带模型的网格体（Arm / Gun / Weapon），绑定到某一副骨骼；别和 Skeleton 混淆 |
 | Socket | 插槽 | 骨骼上的挂点（配件、瞄准定位用），来自骨骼资产本身 |
+| Function | 函数 | 蓝图里封装一段逻辑的节点；可设为纯函数 |
+| Pure Function | 纯函数 | **没有白色执行引脚**的函数，只在数据被需要时自动计算；适合只读查表。第 13 课 `UpdateScoreSensitivity` |
+| Select | 选择 | 按输入值从多个候选里选一个输出（类似 switch）；第 13 课按 `E_PlayerState` 选灵敏度倍率 |
+| Timer | 定时器 | `Set Timer By Event` 延迟/周期调用事件；第 12 课用于恢复 FOV |
+| Interpolation / Lerp | 插值 | 每帧从当前值平滑逼近目标值；第 12 课 `FInterp To` 平滑 FOV |
 
 ## 动画
 
@@ -77,3 +84,7 @@
 | Near Clip Plane | 近剪切平面 | 摄像机最近可见距离，FPS 改 0.1，改完重启 |
 | Accessed None | 读取了空对象 | 运行时错误，用 Is Valid 防护 |
 | World / Relative / Component / Local Space | 世界/相对/组件/本地空间 | 坐标系选择；Modify Bone 空间必须和数据来源一致 |
+| Field of View (FOV) | 视场角 / 视野 | 摄像机可视角度；数值越小画面越窄（像拉近），越大越广（速度感）。第 12 课默认 `105`，瞄准 `75` |
+| Motion Blur | 动态模糊 | 快速移动时画面的拖影效果；第 12 课会把全息准星拉成长条 |
+| After Motion Blur | 动态模糊后 | 材质半透明通道设置：先对整个场景做动态模糊，**最后渲染该材质**。第 12 课用它让准星保持清晰 |
+| Translucent | 半透明 | 材质混合模式，准星/玻璃等叠加显示；和 Opaque 不透明相对 |

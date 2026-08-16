@@ -1,4 +1,4 @@
-> 本页汇总第 01–11 课蓝图里出现过的**通用节点**，按用途分六类。
+> 本页汇总第 01–13 课蓝图里出现过的**通用节点**，按用途分六类。
 > 每个节点说明：**作用 → 针脚含义 → 什么时候用 → 本项目里的实例**。
 > 先记住连线规则：白色粗线 = 执行流（先后次序）；彩色细线 = 数据（值传递）。无白线的节点是纯函数，只在被需要时计算。
 
@@ -137,7 +137,7 @@
 
 - **作用**：把复合类型拆成分量（Vector2D → X、Y）。
 - **等价做法**：右键任意结构体引脚选「分割结构体引脚」，省一个节点。
-- **实例**：第 04 课拆 IA_Move 的 Action Value；第 10 课 SpawnActor 的 Spawn Transform **必须分割**（重组状态没值会编译报错）。
+- **实例**：第 04 课拆 IA_Move 的 Action Value；**第 13 课拆 IA_Look 的 X/Y 用于灵敏度缩放**；第 10 课 SpawnActor 的 Spawn Transform **必须分割**（重组状态没值会编译报错）。
 
 ### 比较节点（`>`、`<`、`==`）
 
@@ -159,7 +159,56 @@
 ### Select
 
 - **作用**：按输入值从多个候选里选一个输出（类似 switch）。
-- **实例**：第 06 课 `UpdateMoveSpeed` 按 `E_PlayerState` 选出对应的 Max Walk Speed。
+- **实例**：第 06 课 `UpdateMoveSpeed` 按 `E_PlayerState` 选出对应的 Max Walk Speed；**第 13 课 `UpdateScoreSensitivity` 按 `E_PlayerState` 选出不同状态下的灵敏度倍率（Aim=0.4）**。
+
+### FInterp To（浮点插值）
+
+- **作用**：每帧把当前值向目标值平滑逼近。
+- **针脚**：`Current`（绿 float，当前值）→ `Target`（绿 float，目标值）→ `Delta Time`（绿 float，帧间隔）→ `Interp Speed`（绿 float，速度系数，越大越快）→ `Return Value`（绿 float，插值结果）。
+- **场景**：FOV 缩放、相机参数、血量条、任何需要渐变过渡的数值。
+- **实例**：**第 12 课**瞄准时 FOV 从 `105` 缩到 `75`、松开时恢复 `105`，`Delta Time = Get World Delta Seconds`，`Interp Speed = 8`。
+
+### Nearly Equal（Float）
+
+- **作用**：判断两个浮点数是否“足够接近”（差值小于 `Error Tolerance`），输出红色布尔。
+- **针脚**：`A`、`B`（绿 float 比较值）→ `Error Tolerance`（绿 float 容差）→ `Return Value`（红 bool）。
+- **场景**：浮点数不能直接 `==`，用这个判断过渡是否到位。
+- **实例**：**第 12 课** `OutFOV` 里判断当前 FOV 与 `DefaultFOV` 差值是否小于 `0.1`，到了就停定时器。
+
+### Set Timer By Event / Clear and Invalidate Timer by Handle
+
+- **作用**：启动/停止一个定时器，到时间触发指定事件。
+- **针脚**：
+  - **Set Timer By Event**：`Event`（白线入口，要调用的自定义事件名）、`Time`（绿 float，延迟/周期秒数）、`Looping`（红 bool，是否循环）、`Return Value`（定时器句柄，**必须提升为变量**保存）。
+  - **Clear and Invalidate Timer by Handle**：`Handle`（定时器句柄）——停止对应定时器。
+- **场景**：需要“每帧/每隔一段时间重复执行”但又不想占用 `Event Tick`；尤其是一段只在特定条件下持续的平滑过渡。
+- **实例**：**第 12 课**松开右键启动循环定时器调用 `OutFOV` 每帧恢复 FOV；再次按下右键时先 `Clear Timer` 防止两条链路打架。
+
+### Custom Event（自定义事件）
+
+- **作用**：用户自己命名的事件节点，可被定时器或其它执行线调用。
+- **场景**：把一段需要被重复触发的逻辑（如恢复 FOV）封装成独立入口。
+- **实例**：**第 12 课** `OutFOV` 自定义事件，负责把摄像机 FOV 从瞄准值平滑拉回默认。
+
+### Get World Delta Seconds
+
+- **作用**：获取上一帧到当前帧经过的秒数（绿 float）。
+- **场景**：所有“随时间渐变”的计算都要乘它，保证 30fps 和 144fps 下速度一致；也可直接作为循环定时器的 `Time` 参数实现“每帧触发”。
+- **实例**：**第 12 课** FOV 缩放的 `FInterp To.Delta Time`；**第 12 课** `Set Timer By Event.Time` 也接它，让 `OutFOV` 近似每帧执行。
+
+### Multiply（乘法）
+
+- **作用**：把两个或多个值相乘。
+- **针脚**：默认两个绿色输入，可右键“添加引脚”继续加；输出乘积。
+- **场景**：缩放——原始输入 × 灵敏度系数 × 状态倍率。
+- **实例**：**第 13 课** `IA_Look` 的 `X / Y` 分量 × `MouseSensitivity` × `OutSensitivity`（来自 `UpdateScoreSensitivity`）后再喂给 `Add Controller Yaw/Pitch Input`。
+
+### 自定义函数 / 纯函数（Pure Function）
+
+- **作用**：把一段计算封装成可复用节点；纯函数**没有白色执行引脚**，只在数据被需要时自动求值。
+- **设置**：函数细节面板勾选 **纯函数（Pure）**。
+- **场景**：只读查表、根据状态返回配置值（灵敏度倍率、速度映射等），让 Event Graph 更干净。
+- **实例**：**第 13 课** `UpdateScoreSensitivity` 按 `E_PlayerState` 返回灵敏度倍率（Idle/Walk/Run=1.0，Aim=0.4），无白线直连 `Multiply`。
 
 ### Print String
 
@@ -193,6 +242,13 @@
 
 - **作用**：设置角色移动组件的最大行走速度。Target 接 Character Movement。
 - **实例**：第 06 课按状态设 400 / 600 / 265，瞄准减速、跑步加速。
+
+### Get Field Of View / Set Field Of View
+
+- **作用**：读取/设置**摄像机组件**的 FOV（视场角，Field of View）。
+- **针脚**：`Target` = `Camera`（摄像机组件，不能接角色 Actor）；`Value / Return Value` = 绿 float。
+- **场景**：动态调整视野——瞄准收窄（像拉近），跑步/平时广角（更有速度感）。
+- **实例**：**第 12 课**默认 FOV `105`；瞄准时用 `Set Field Of View` 配合 `FInterp To` 平滑缩到 `75`；`UpdateDefaultFOV` 函数用 `Get Field Of View` 在游戏开始时把默认值存进 `DefaultFOV` 变量。
 
 ---
 

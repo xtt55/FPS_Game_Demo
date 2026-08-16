@@ -37,7 +37,7 @@
     <h1 class="page-title">附录一 · 蓝图通用节点速查</h1>
     
     <blockquote>
-<p>本页汇总第 01–11 课蓝图里出现过的<strong>通用节点</strong>，按用途分六类。
+<p>本页汇总第 01–13 课蓝图里出现过的<strong>通用节点</strong>，按用途分六类。
 每个节点说明：<strong>作用 → 针脚含义 → 什么时候用 → 本项目里的实例</strong>。
 先记住连线规则：白色粗线 = 执行流（先后次序）；彩色细线 = 数据（值传递）。无白线的节点是纯函数，只在被需要时计算。</p>
 </blockquote>
@@ -172,7 +172,7 @@
 <ul>
 <li><strong>作用</strong>：把复合类型拆成分量（Vector2D → X、Y）。</li>
 <li><strong>等价做法</strong>：右键任意结构体引脚选「分割结构体引脚」，省一个节点。</li>
-<li><strong>实例</strong>：第 04 课拆 IA_Move 的 Action Value；第 10 课 SpawnActor 的 Spawn Transform <strong>必须分割</strong>（重组状态没值会编译报错）。</li>
+<li><strong>实例</strong>：第 04 课拆 IA_Move 的 Action Value；<strong>第 13 课拆 IA_Look 的 X/Y 用于灵敏度缩放</strong>；第 10 课 SpawnActor 的 Spawn Transform <strong>必须分割</strong>（重组状态没值会编译报错）。</li>
 </ul>
 <h3>比较节点（<code>&gt;</code>、<code>&lt;</code>、<code>==</code>）</h3>
 <ul>
@@ -194,7 +194,58 @@
 <h3>Select</h3>
 <ul>
 <li><strong>作用</strong>：按输入值从多个候选里选一个输出（类似 switch）。</li>
-<li><strong>实例</strong>：第 06 课 <code>UpdateMoveSpeed</code> 按 <code>E_PlayerState</code> 选出对应的 Max Walk Speed。</li>
+<li><strong>实例</strong>：第 06 课 <code>UpdateMoveSpeed</code> 按 <code>E_PlayerState</code> 选出对应的 Max Walk Speed；<strong>第 13 课 <code>UpdateScoreSensitivity</code> 按 <code>E_PlayerState</code> 选出不同状态下的灵敏度倍率（Aim=0.4）</strong>。</li>
+</ul>
+<h3>FInterp To（浮点插值）</h3>
+<ul>
+<li><strong>作用</strong>：每帧把当前值向目标值平滑逼近。</li>
+<li><strong>针脚</strong>：<code>Current</code>（绿 float，当前值）→ <code>Target</code>（绿 float，目标值）→ <code>Delta Time</code>（绿 float，帧间隔）→ <code>Interp Speed</code>（绿 float，速度系数，越大越快）→ <code>Return Value</code>（绿 float，插值结果）。</li>
+<li><strong>场景</strong>：FOV 缩放、相机参数、血量条、任何需要渐变过渡的数值。</li>
+<li><strong>实例</strong>：<strong>第 12 课</strong>瞄准时 FOV 从 <code>105</code> 缩到 <code>75</code>、松开时恢复 <code>105</code>，<code>Delta Time = Get World Delta Seconds</code>，<code>Interp Speed = 8</code>。</li>
+</ul>
+<h3>Nearly Equal（Float）</h3>
+<ul>
+<li><strong>作用</strong>：判断两个浮点数是否“足够接近”（差值小于 <code>Error Tolerance</code>），输出红色布尔。</li>
+<li><strong>针脚</strong>：<code>A</code>、<code>B</code>（绿 float 比较值）→ <code>Error Tolerance</code>（绿 float 容差）→ <code>Return Value</code>（红 bool）。</li>
+<li><strong>场景</strong>：浮点数不能直接 <code>==</code>，用这个判断过渡是否到位。</li>
+<li><strong>实例</strong>：<strong>第 12 课</strong> <code>OutFOV</code> 里判断当前 FOV 与 <code>DefaultFOV</code> 差值是否小于 <code>0.1</code>，到了就停定时器。</li>
+</ul>
+<h3>Set Timer By Event / Clear and Invalidate Timer by Handle</h3>
+<ul>
+<li><strong>作用</strong>：启动/停止一个定时器，到时间触发指定事件。</li>
+<li><strong>针脚</strong>：<ul>
+<li><strong>Set Timer By Event</strong>：<code>Event</code>（白线入口，要调用的自定义事件名）、<code>Time</code>（绿 float，延迟/周期秒数）、<code>Looping</code>（红 bool，是否循环）、<code>Return Value</code>（定时器句柄，<strong>必须提升为变量</strong>保存）。</li>
+<li><strong>Clear and Invalidate Timer by Handle</strong>：<code>Handle</code>（定时器句柄）——停止对应定时器。</li>
+</ul>
+</li>
+<li><strong>场景</strong>：需要“每帧/每隔一段时间重复执行”但又不想占用 <code>Event Tick</code>；尤其是一段只在特定条件下持续的平滑过渡。</li>
+<li><strong>实例</strong>：<strong>第 12 课</strong>松开右键启动循环定时器调用 <code>OutFOV</code> 每帧恢复 FOV；再次按下右键时先 <code>Clear Timer</code> 防止两条链路打架。</li>
+</ul>
+<h3>Custom Event（自定义事件）</h3>
+<ul>
+<li><strong>作用</strong>：用户自己命名的事件节点，可被定时器或其它执行线调用。</li>
+<li><strong>场景</strong>：把一段需要被重复触发的逻辑（如恢复 FOV）封装成独立入口。</li>
+<li><strong>实例</strong>：<strong>第 12 课</strong> <code>OutFOV</code> 自定义事件，负责把摄像机 FOV 从瞄准值平滑拉回默认。</li>
+</ul>
+<h3>Get World Delta Seconds</h3>
+<ul>
+<li><strong>作用</strong>：获取上一帧到当前帧经过的秒数（绿 float）。</li>
+<li><strong>场景</strong>：所有“随时间渐变”的计算都要乘它，保证 30fps 和 144fps 下速度一致；也可直接作为循环定时器的 <code>Time</code> 参数实现“每帧触发”。</li>
+<li><strong>实例</strong>：<strong>第 12 课</strong> FOV 缩放的 <code>FInterp To.Delta Time</code>；<strong>第 12 课</strong> <code>Set Timer By Event.Time</code> 也接它，让 <code>OutFOV</code> 近似每帧执行。</li>
+</ul>
+<h3>Multiply（乘法）</h3>
+<ul>
+<li><strong>作用</strong>：把两个或多个值相乘。</li>
+<li><strong>针脚</strong>：默认两个绿色输入，可右键“添加引脚”继续加；输出乘积。</li>
+<li><strong>场景</strong>：缩放——原始输入 × 灵敏度系数 × 状态倍率。</li>
+<li><strong>实例</strong>：<strong>第 13 课</strong> <code>IA_Look</code> 的 <code>X / Y</code> 分量 × <code>MouseSensitivity</code> × <code>OutSensitivity</code>（来自 <code>UpdateScoreSensitivity</code>）后再喂给 <code>Add Controller Yaw/Pitch Input</code>。</li>
+</ul>
+<h3>自定义函数 / 纯函数（Pure Function）</h3>
+<ul>
+<li><strong>作用</strong>：把一段计算封装成可复用节点；纯函数<strong>没有白色执行引脚</strong>，只在数据被需要时自动求值。</li>
+<li><strong>设置</strong>：函数细节面板勾选 <strong>纯函数（Pure）</strong>。</li>
+<li><strong>场景</strong>：只读查表、根据状态返回配置值（灵敏度倍率、速度映射等），让 Event Graph 更干净。</li>
+<li><strong>实例</strong>：<strong>第 13 课</strong> <code>UpdateScoreSensitivity</code> 按 <code>E_PlayerState</code> 返回灵敏度倍率（Idle/Walk/Run=1.0，Aim=0.4），无白线直连 <code>Multiply</code>。</li>
 </ul>
 <h3>Print String</h3>
 <ul>
@@ -226,6 +277,13 @@
 <ul>
 <li><strong>作用</strong>：设置角色移动组件的最大行走速度。Target 接 Character Movement。</li>
 <li><strong>实例</strong>：第 06 课按状态设 400 / 600 / 265，瞄准减速、跑步加速。</li>
+</ul>
+<h3>Get Field Of View / Set Field Of View</h3>
+<ul>
+<li><strong>作用</strong>：读取/设置<strong>摄像机组件</strong>的 FOV（视场角，Field of View）。</li>
+<li><strong>针脚</strong>：<code>Target</code> = <code>Camera</code>（摄像机组件，不能接角色 Actor）；<code>Value / Return Value</code> = 绿 float。</li>
+<li><strong>场景</strong>：动态调整视野——瞄准收窄（像拉近），跑步/平时广角（更有速度感）。</li>
+<li><strong>实例</strong>：<strong>第 12 课</strong>默认 FOV <code>105</code>；瞄准时用 <code>Set Field Of View</code> 配合 <code>FInterp To</code> 平滑缩到 <code>75</code>；<code>UpdateDefaultFOV</code> 函数用 <code>Get Field Of View</code> 在游戏开始时把默认值存进 <code>DefaultFOV</code> 变量。</li>
 </ul>
 <hr>
 <h2>六、动画图（AnimGraph）专用节点</h2>

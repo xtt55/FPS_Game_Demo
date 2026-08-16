@@ -52,8 +52,10 @@
 <li><input disabled="" type="checkbox"> 枪械 ABP：Initialize 缓存人物 ABP 引用 → Update 读人物变量（直接照抄 ABP_Virtus）</li>
 <li><input disabled="" type="checkbox"> 枪械混合空间 BS：轴/平滑时间/平滑类型<strong>与人物 BS 保持一致</strong></li>
 <li><input disabled="" type="checkbox"> 骨骼 body 上加 <strong>AimSocket</strong> 插槽并调位置（瞄准用，<a href="lesson-11.html">第11课</a>）</li>
+<li><input disabled="" type="checkbox"> 如需要：加 <strong>Sight</strong> 机瞄组件（<a href="lesson-11.html">第12课</a>）；全息准星材质设 <strong>After Motion Blur</strong></li>
 <li><input disabled="" type="checkbox"> <code>BP_FPS_Player</code> 的 <code>SpawnWeapon</code>：SpawnActor 的 Class 换成新枪（或做换枪逻辑）</li>
-<li><input disabled="" type="checkbox"> PIE 验证：移动不卡碰撞、动画同步、瞄准头到位</li>
+<li><input disabled="" type="checkbox"> 如这把枪影响默认 FOV / 灵敏度倍率，去 <code>BP_FPS_Player</code> 检查 <code>DefaultFOV</code>（<a href="lesson-11.html">第12课</a>）、<code>MouseSensitivity</code> 和 <code>UpdateScoreSensitivity</code>（<a href="lesson-13.html">第13课</a>）是否需要覆盖</li>
+<li><input disabled="" type="checkbox"> PIE 验证：移动不卡碰撞、动画同步、瞄准头到位、FOV/灵敏度手感对劲</li>
 </ul>
 <h2>SOP 2：新加一种角色状态（如冲刺、滑铲）</h2>
 <p>前置：状态枚举与状态机已搭好（<a href="lesson-06.html">第06课</a>、<a href="lesson-07-09.html">第07–09课</a>）。</p>
@@ -63,6 +65,7 @@
 <li><input disabled="" type="checkbox"> 角色蓝图写 <code>Want to XXX</code> 变量（Triggered=true / Completed=false）</li>
 <li><input disabled="" type="checkbox"> <code>UpdatePlayerState</code> 加分支——<strong>想清楚优先级</strong>插在哪个 Branch 前面</li>
 <li><input disabled="" type="checkbox"> <code>UpdateMoveSpeed</code> 的 Select 加一行速度</li>
+<li><input disabled="" type="checkbox"> <code>UpdateScoreSensitivity</code> 的 Select 加一行灵敏度倍率（如该状态下视角速度需要变化，<a href="lesson-13.html">第13课</a>）</li>
 <li><input disabled="" type="checkbox"> <strong>人物 ABP</strong> 状态机：加新状态（选动画、决定勾不勾循环）+ 进出双向转换规则</li>
 <li><input disabled="" type="checkbox"> <strong>枪械 ABP</strong> 状态机：同样来一遍（动画选 Weapon 系列）</li>
 <li><input disabled="" type="checkbox"> 检查与现有状态的打断边要不要补（参考 ToAim↔ToIdle）</li>

@@ -75,6 +75,30 @@
 <td align="left"><a href="lesson-04.html">第04课</a></td>
 </tr>
 <tr>
+<td align="left">鼠标视角完全不动</td>
+<td align="left"><code>MouseSensitivity</code> 默认值为 <code>0</code>，或 <code>IA_Look</code> X/Y 没乘灵敏度就给了 <code>Add Controller ... Input</code></td>
+<td align="left">检查 <code>MouseSensitivity</code> 默认 <code>0.7</code>，并确认乘法节点两个输入都有</td>
+<td align="left"><a href="lesson-13.html">第13课</a></td>
+</tr>
+<tr>
+<td align="left">瞄准时鼠标还是很快/很慢</td>
+<td align="left"><code>Aim</code> 状态灵敏度倍率设反，或 <code>Out Sensitivity</code> 根本没乘</td>
+<td align="left">确认 <code>UpdateScoreSensitivity</code> 里 <code>Aim=0.4</code>，并且 <code>X/Y</code> 同时乘 <code>MouseSensitivity × Out Sensitivity</code></td>
+<td align="left"><a href="lesson-13.html">第13课</a></td>
+</tr>
+<tr>
+<td align="left">鼠标上下左右反向</td>
+<td align="left"><code>Yaw</code> / <code>Pitch</code> 接反（X 接了 Pitch，Y 接了 Yaw）</td>
+<td align="left"><code>X</code> → <code>Add Controller Yaw Input</code>；<code>Y</code> → <code>Add Controller Pitch Input</code></td>
+<td align="left"><a href="lesson-13.html">第13课</a></td>
+</tr>
+<tr>
+<td align="left">纯函数节点非要接执行线</td>
+<td align="left"><code>UpdateScoreSensitivity</code> 没勾 <strong>纯函数</strong></td>
+<td align="left">函数 Details 面板勾选 <strong>纯函数（Pure）</strong></td>
+<td align="left"><a href="lesson-13.html">第13课</a></td>
+</tr>
+<tr>
 <td align="left">只按跑步键跑不起来</td>
 <td align="left">设计上必须 <strong>W + 跑步键</strong>同时（Move X &gt; 0 且 Want To Run）</td>
 <td align="left">不是 bug，是优先级设计</td>
@@ -268,6 +292,36 @@
 <td align="left">Blend Poses 枚举节点没加 Aim 引脚，或 Aim 支路没接 Modify Bone</td>
 <td align="left">右键「添加元素引脚 Aim」并接好支路</td>
 <td align="left"><a href="lesson-11.html">第11课</a></td>
+</tr>
+<tr>
+<td align="left">按下右键 FOV 突变 / 没有缩放动画</td>
+<td align="left"><code>Set Field Of View</code> 直接设 <code>75</code>，没有用 <code>FInterp To</code> 或 <code>Interp Speed=0</code></td>
+<td align="left">用 <code>FInterp To</code>，<code>Target=75</code>，<code>Interp Speed=8</code>，<code>Delta Time=Get World Delta Seconds</code></td>
+<td align="left"><a href="lesson-11.html">第12课</a></td>
+</tr>
+<tr>
+<td align="left">松开右键 FOV 不恢复 / 只恢复一帧</td>
+<td align="left"><code>Set Timer By Event</code> 没勾 <strong>Looping</strong>，或句柄没存</td>
+<td align="left">勾 <code>Looping</code>，<code>Return Value</code> 提升为 <code>OutFOVHandle</code> 变量</td>
+<td align="left"><a href="lesson-11.html">第12课</a></td>
+</tr>
+<tr>
+<td align="left">按瞄准时 FOV 抖动 / 缩放和恢复打架</td>
+<td align="left">没清掉已有的恢复定时器</td>
+<td align="left">按下右键的 Triggered 分支先 <code>Clear and Invalidate Timer by Handle</code></td>
+<td align="left"><a href="lesson-11.html">第12课</a></td>
+</tr>
+<tr>
+<td align="left">FOV 恢复到 105 附近还一直循环 / 回不到 105</td>
+<td align="left"><code>Nearly Equal</code> 容差不合适，或 <code>DefaultFOV</code> 写死</td>
+<td align="left"><code>Error Tolerance=0.1</code>；用 <code>UpdateDefaultFOV</code> 在游戏开始时从 Camera 读取默认值</td>
+<td align="left"><a href="lesson-11.html">第12课</a></td>
+</tr>
+<tr>
+<td align="left">全息准星快速移动时被拉成长条</td>
+<td align="left">材质被动态模糊一起处理了</td>
+<td align="left">准星材质半透明通道设为 <strong>After Motion Blur</strong>（动态模糊后）</td>
+<td align="left"><a href="lesson-11.html">第12课</a></td>
 </tr>
 </tbody></table>
 <h2>编辑器与环境</h2>

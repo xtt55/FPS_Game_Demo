@@ -9,6 +9,10 @@
 | 鼠标上滑视角却向下 | 鼠标 Y 轴方向反了 | 在 **IMC 的 IA_Look** 上加修改器 **Negate**（只反转 Y），不要到处乘 -1 | [第03课](lesson-03.html) |
 | WASD 左右反了/前后左右对调 | A/D 漏了 Swizzle，或 A 漏了 Negate | W 默认；S=Negate；D=Swizzle；A=Swizzle+Negate | [第03课](lesson-03.html) |
 | 低头按 W 越走越慢/卡住 | 移动时把 Pitch 也喂给了方向向量 | Get Control Rotation **只连 Z（Yaw）** | [第04课](lesson-04.html) |
+| 鼠标视角完全不动 | `MouseSensitivity` 默认值为 `0`，或 `IA_Look` X/Y 没乘灵敏度就给了 `Add Controller ... Input` | 检查 `MouseSensitivity` 默认 `0.7`，并确认乘法节点两个输入都有 | [第13课](lesson-13.html) |
+| 瞄准时鼠标还是很快/很慢 | `Aim` 状态灵敏度倍率设反，或 `Out Sensitivity` 根本没乘 | 确认 `UpdateScoreSensitivity` 里 `Aim=0.4`，并且 `X/Y` 同时乘 `MouseSensitivity × Out Sensitivity` | [第13课](lesson-13.html) |
+| 鼠标上下左右反向 | `Yaw` / `Pitch` 接反（X 接了 Pitch，Y 接了 Yaw） | `X` → `Add Controller Yaw Input`；`Y` → `Add Controller Pitch Input` | [第13课](lesson-13.html) |
+| 纯函数节点非要接执行线 | `UpdateScoreSensitivity` 没勾 **纯函数** | 函数 Details 面板勾选 **纯函数（Pure）** | [第13课](lesson-13.html) |
 | 只按跑步键跑不起来 | 设计上必须 **W + 跑步键**同时（Move X > 0 且 Want To Run） | 不是 bug，是优先级设计 | [第06课](lesson-06.html) |
 | 配完输入按键完全没反应 | 第 03 课只配了映射，**还没写移动逻辑**；或 GameMode 没在项目设置里指定 | 先确认项目设置→默认模式；逻辑在第 04 课 | [第03课](lesson-03.html) |
 | 换关卡后 GameMode 失效 | 只设了「世界场景设置→游戏模式重载」（仅当前关卡） | 改到项目设置→默认模式（全局） | [第03课](lesson-03.html) |
@@ -51,6 +55,11 @@
 | 瞄准时头漂到奇怪位置 | AimSocket 名字拼错，Get Socket Location 退回组件原点 | 插槽名复制粘贴，别手打 | [第11课](lesson-11.html) |
 | 头凑过去但对不齐瞄具 | Modify Bone 用了组件空间，或平移模式不是替换 | 平移空间 **World Space** + 模式 **Replace Existing** | [第11课](lesson-11.html) |
 | 瞄准头不动 | Blend Poses 枚举节点没加 Aim 引脚，或 Aim 支路没接 Modify Bone | 右键「添加元素引脚 Aim」并接好支路 | [第11课](lesson-11.html) |
+| 按下右键 FOV 突变 / 没有缩放动画 | `Set Field Of View` 直接设 `75`，没有用 `FInterp To` 或 `Interp Speed=0` | 用 `FInterp To`，`Target=75`，`Interp Speed=8`，`Delta Time=Get World Delta Seconds` | [第12课](lesson-11.html) |
+| 松开右键 FOV 不恢复 / 只恢复一帧 | `Set Timer By Event` 没勾 **Looping**，或句柄没存 | 勾 `Looping`，`Return Value` 提升为 `OutFOVHandle` 变量 | [第12课](lesson-11.html) |
+| 按瞄准时 FOV 抖动 / 缩放和恢复打架 | 没清掉已有的恢复定时器 | 按下右键的 Triggered 分支先 `Clear and Invalidate Timer by Handle` | [第12课](lesson-11.html) |
+| FOV 恢复到 105 附近还一直循环 / 回不到 105 | `Nearly Equal` 容差不合适，或 `DefaultFOV` 写死 | `Error Tolerance=0.1`；用 `UpdateDefaultFOV` 在游戏开始时从 Camera 读取默认值 | [第12课](lesson-11.html) |
+| 全息准星快速移动时被拉成长条 | 材质被动态模糊一起处理了 | 准星材质半透明通道设为 **After Motion Blur**（动态模糊后） | [第12课](lesson-11.html) |
 
 ## 编辑器与环境
 

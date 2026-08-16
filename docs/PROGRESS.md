@@ -1,7 +1,7 @@
 # 站点构建进度（供中断后接手）
 
 > 本文件记录 UE5 FPS 学习笔记静态站的构建进度与关键决策。随时更新。
-> 最新更新：2026-08-09 五次更新（新增第 13 课「调节灵敏度」）。
+> 最新更新：2026-08-09 六次更新（把第 12/13 课内容整理进附录）。
 
 ## 目标
 
@@ -76,6 +76,16 @@
 - 新增第 13 课「调节灵敏度」：`content/13.md` + `lesson-13.html`，视频 P14
 - 内容：`MouseSensitivity` 变量（默认 0.7）+ 纯函数 `UpdateScoreSensitivity`（按 `E_PlayerState` 输出倍率，Aim=0.4）+ `IA_Look` 输入先乘灵敏度再进 `Add Controller Yaw/Pitch Input`
 - 新增 4 张截图并更新 `copy-images.mjs` 映射；copy 校验 88/88
+
+## 2026-08-09 六次更新
+
+- 把第 12/13 课内容整理进附录：
+  - 附录一：新增 `FInterp To`、`Nearly Equal`、`Set/Clear Timer`、`Custom Event`、`Get World Delta Seconds`、`Multiply`、纯函数、`Get/Set Field Of View`
+  - 附录二：新增 FOV 缩放 / 定时器 / 准星动态模糊 / 鼠标灵敏度相关踩坑条目
+  - 附录三：新增「FOV 与灵敏度链路」数据流图
+  - 附录五：新增 FOV / Motion Blur / After Motion Blur / Sensitivity / Pure Function / Timer / Interpolation / Material 前缀等术语
+  - 附录四（SOP）：新枪/新状态 checklist 加入 FOV、灵敏度倍率、After Motion Blur 检查项
+  - 附录七（设计原则）：新增「手感数值不要硬编码」「定时器/循环过渡要停掉"
 
 ## 待办（全部完成 ✅）
 

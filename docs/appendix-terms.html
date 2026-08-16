@@ -80,6 +80,11 @@
 <td align="left">骨骼网格体（Skeletal Mesh，素材包资产）</td>
 <td align="left"><code>SK_MCX-VIRTUS</code></td>
 </tr>
+<tr>
+<td align="left"><code>M_</code></td>
+<td align="left">材质（Material）</td>
+<td align="left"><code>M_Holographic</code>（第 12 课全息瞄具准星材质）</td>
+</tr>
 </tbody></table>
 <h2>⚠️ 踩过坑的翻译</h2>
 <table>
@@ -150,6 +155,11 @@
 <td align="left">增强输入本地玩家子系统</td>
 <td align="left">增强输入的入口，Add Mapping Context 从这拿</td>
 </tr>
+<tr>
+<td align="left">Sensitivity</td>
+<td align="left">灵敏度</td>
+<td align="left">鼠标 / 视角输入的缩放系数；第 13 课 <code>MouseSensitivity × OutSensitivity</code></td>
+</tr>
 </tbody></table>
 <h2>框架与对象</h2>
 <table>
@@ -209,6 +219,31 @@
 <td align="left">Socket</td>
 <td align="left">插槽</td>
 <td align="left">骨骼上的挂点（配件、瞄准定位用），来自骨骼资产本身</td>
+</tr>
+<tr>
+<td align="left">Function</td>
+<td align="left">函数</td>
+<td align="left">蓝图里封装一段逻辑的节点；可设为纯函数</td>
+</tr>
+<tr>
+<td align="left">Pure Function</td>
+<td align="left">纯函数</td>
+<td align="left"><strong>没有白色执行引脚</strong>的函数，只在数据被需要时自动计算；适合只读查表。第 13 课 <code>UpdateScoreSensitivity</code></td>
+</tr>
+<tr>
+<td align="left">Select</td>
+<td align="left">选择</td>
+<td align="left">按输入值从多个候选里选一个输出（类似 switch）；第 13 课按 <code>E_PlayerState</code> 选灵敏度倍率</td>
+</tr>
+<tr>
+<td align="left">Timer</td>
+<td align="left">定时器</td>
+<td align="left"><code>Set Timer By Event</code> 延迟/周期调用事件；第 12 课用于恢复 FOV</td>
+</tr>
+<tr>
+<td align="left">Interpolation / Lerp</td>
+<td align="left">插值</td>
+<td align="left">每帧从当前值平滑逼近目标值；第 12 课 <code>FInterp To</code> 平滑 FOV</td>
 </tr>
 </tbody></table>
 <h2>动画</h2>
@@ -324,6 +359,26 @@
 <td align="left">World / Relative / Component / Local Space</td>
 <td align="left">世界/相对/组件/本地空间</td>
 <td align="left">坐标系选择；Modify Bone 空间必须和数据来源一致</td>
+</tr>
+<tr>
+<td align="left">Field of View (FOV)</td>
+<td align="left">视场角 / 视野</td>
+<td align="left">摄像机可视角度；数值越小画面越窄（像拉近），越大越广（速度感）。第 12 课默认 <code>105</code>，瞄准 <code>75</code></td>
+</tr>
+<tr>
+<td align="left">Motion Blur</td>
+<td align="left">动态模糊</td>
+<td align="left">快速移动时画面的拖影效果；第 12 课会把全息准星拉成长条</td>
+</tr>
+<tr>
+<td align="left">After Motion Blur</td>
+<td align="left">动态模糊后</td>
+<td align="left">材质半透明通道设置：先对整个场景做动态模糊，<strong>最后渲染该材质</strong>。第 12 课用它让准星保持清晰</td>
+</tr>
+<tr>
+<td align="left">Translucent</td>
+<td align="left">半透明</td>
+<td align="left">材质混合模式，准星/玻璃等叠加显示；和 Opaque 不透明相对</td>
 </tr>
 </tbody></table>
 

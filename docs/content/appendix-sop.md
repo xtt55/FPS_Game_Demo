@@ -14,8 +14,10 @@
 - [ ] 枪械 ABP：Initialize 缓存人物 ABP 引用 → Update 读人物变量（直接照抄 ABP_Virtus）
 - [ ] 枪械混合空间 BS：轴/平滑时间/平滑类型**与人物 BS 保持一致**
 - [ ] 骨骼 body 上加 **AimSocket** 插槽并调位置（瞄准用，[第11课](lesson-11.html)）
+- [ ] 如需要：加 **Sight** 机瞄组件（[第12课](lesson-11.html)）；全息准星材质设 **After Motion Blur**
 - [ ] `BP_FPS_Player` 的 `SpawnWeapon`：SpawnActor 的 Class 换成新枪（或做换枪逻辑）
-- [ ] PIE 验证：移动不卡碰撞、动画同步、瞄准头到位
+- [ ] 如这把枪影响默认 FOV / 灵敏度倍率，去 `BP_FPS_Player` 检查 `DefaultFOV`（[第12课](lesson-11.html)）、`MouseSensitivity` 和 `UpdateScoreSensitivity`（[第13课](lesson-13.html)）是否需要覆盖
+- [ ] PIE 验证：移动不卡碰撞、动画同步、瞄准头到位、FOV/灵敏度手感对劲
 
 ## SOP 2：新加一种角色状态（如冲刺、滑铲）
 
@@ -26,6 +28,7 @@
 - [ ] 角色蓝图写 `Want to XXX` 变量（Triggered=true / Completed=false）
 - [ ] `UpdatePlayerState` 加分支——**想清楚优先级**插在哪个 Branch 前面
 - [ ] `UpdateMoveSpeed` 的 Select 加一行速度
+- [ ] `UpdateScoreSensitivity` 的 Select 加一行灵敏度倍率（如该状态下视角速度需要变化，[第13课](lesson-13.html)）
 - [ ] **人物 ABP** 状态机：加新状态（选动画、决定勾不勾循环）+ 进出双向转换规则
 - [ ] **枪械 ABP** 状态机：同样来一遍（动画选 Weapon 系列）
 - [ ] 检查与现有状态的打断边要不要补（参考 ToAim↔ToIdle）
