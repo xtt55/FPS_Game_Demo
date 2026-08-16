@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第13课 · 调节灵敏度 · UE5 FPS 学习笔记</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menu-btn" aria-label="菜单">☰</button>
+  <a class="site-title" href="index.html">UE5 FPS 学习笔记</a>
+  <span class="course-link"><a href="https://www.bilibili.com/video/BV1aw9jBeEHr" target="_blank" rel="noopener">课程：星露Studio · UE5 制作第一人称射击游戏</a></span>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="nav-link" href="index.html">首页</a>
+<a class="nav-link" href="lesson-01.html">01 创建项目及导入素材</a>
+<a class="nav-link" href="lesson-02.html">02 修改DDC缓存路径</a>
+<a class="nav-link" href="lesson-03.html">03 配置游戏模式及输入</a>
+<a class="nav-link" href="lesson-04.html">04 实现角色基本能力</a>
+<a class="nav-link" href="lesson-05.html">05 完善角色细节</a>
+<a class="nav-link" href="lesson-06.html">06 制作角色能力系统</a>
+<a class="nav-link" href="lesson-07-09.html">07-09 制作动画系统</a>
+<a class="nav-link" href="lesson-10.html">10 模块化设计及DeBug</a>
+<a class="nav-link" href="lesson-11.html">11-12 完善瞄准系统</a>
+<a class="nav-link active" href="lesson-13.html">13 调节灵敏度</a>
+<a class="nav-link" href="appendix-nodes.html">附录一 · 通用节点速查</a>
+<a class="nav-link" href="appendix-troubleshooting.html">附录二 · 踩坑速查</a>
+<a class="nav-link" href="appendix-architecture.html">附录三 · 数据流全景</a>
+<a class="nav-link" href="appendix-sop.html">附录四 · SOP 清单</a>
+<a class="nav-link" href="appendix-terms.html">附录五 · 术语对照</a>
+<a class="nav-link" href="appendix-workflow.html">附录六 · 工具链与环境</a>
+<a class="nav-link" href="appendix-principles.html">附录七 · 设计原则</a>
+  </nav>
+  <main class="content">
+    <h1 class="page-title">第13课 · 调节灵敏度</h1>
+    <a class="video-link" href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=14" target="_blank" rel="noopener">▶ 对应视频（P14）</a>
+    <blockquote>
+<p>对应视频：<a href="https://www.bilibili.com/video/BV1aw9jBeEHr/?p=14">P14</a></p>
+</blockquote>
+<h2>本课要解决什么</h2>
+<ol>
+<li>给鼠标视角增加一个<strong>基础灵敏度系数</strong>（<code>MouseSensitivity</code> 变量，默认 <code>0.7</code>），让转头速度可调。</li>
+<li>不同状态下使用<strong>不同的灵敏度倍率</strong>：Idle / Walk / Run 保持 <code>1.0</code>，Aim 时降到 <code>0.4</code>（瞄准时更稳、更精确）。</li>
+<li>把原来的 <code>IA_Look</code> 直接连 <code>Add Controller Yaw/Pitch Input</code>，改成<strong>先乘灵敏度再输入</strong>。</li>
+<li>学习用**纯函数（Pure）**封装一个“根据当前状态返回倍率”的小工具。</li>
+</ol>
+<hr>
+<h2>第一步：新建 MouseSensitivity 变量</h2>
+<p>在 <code>BP_FPS_Player</code> 的变量列表里新建一个浮点变量 <strong><code>MouseSensitivity</code></strong>：</p>
+<ul>
+<li>类型：<strong>float（浮点）</strong></li>
+<li>默认值：<strong><code>0.7</code></strong></li>
+<li>作用：全局基础鼠标灵敏度，后续所有视角输入都要先乘它</li>
+</ul>
+<p><a class="img-link" href="assets/img/l13-mousesensitivity-default.png" target="_blank" rel="noopener"><img src="assets/img/l13-mousesensitivity-default.png" alt="MouseSensitivity 默认值 0.7" loading="lazy"></a></p>
+<blockquote>
+<p>为什么默认 <code>0.7</code>？工程里试出来的手感值。以后可以在运行时暴露到设置菜单让玩家自己改。</p>
+</blockquote>
+<hr>
+<h2>第二步：新建纯函数 UpdateScoreSensitivity</h2>
+<p>新建一个函数，命名为 <strong><code>UpdateScoreSensitivity</code></strong>（函数名随项目实际命名，这里是笔记里的名字）。</p>
+<h3>输出变量</h3>
+<ul>
+<li>名字：<strong><code>OutSensitivity</code></strong></li>
+<li>类型：<strong>float</strong></li>
+</ul>
+<p><a class="img-link" href="assets/img/l13-updatescore-function-select.png" target="_blank" rel="noopener"><img src="assets/img/l13-updatescore-function-select.png" alt="函数体内部" loading="lazy"></a></p>
+<h3>函数体：按状态选倍率</h3>
+<pre><code>E_PlayerState
+  ↓
+Select（枚举选择）
+  ├ Idle  → 1.0
+  ├ Walk  → 1.0
+  ├ Run   → 1.0
+  ├ Aim   → 0.4
+  ↓
+Return Node：Out Sensitivity
+</code></pre>
+<ul>
+<li><strong>Select</strong> 节点：根据枚举值输出不同的浮点常数。</li>
+<li><code>Idle / Walk / Run</code> 都是 <code>1.0</code>，意思是平时转身速度就是“基础灵敏度 × 1”。</li>
+<li><code>Aim</code> 是 <code>0.4</code>，意思是瞄准时转身速度变成“基础灵敏度的 40%”，更稳。</li>
+</ul>
+<h3>关键设置：把函数设为“纯函数”</h3>
+<p><a class="img-link" href="assets/img/l13-updatescore-pure.png" target="_blank" rel="noopener"><img src="assets/img/l13-updatescore-pure.png" alt="勾选纯函数" loading="lazy"></a></p>
+<p>在函数细节面板里勾选 <strong>纯函数（Pure）</strong>。</p>
+<ul>
+<li>纯函数<strong>没有白色执行引脚</strong>，只有输入 / 输出数据引脚。</li>
+<li>它会像 <code>Break Vector 2D</code>、<code>Get</code> 变量一样，在蓝图需要它的值时自动求值。</li>
+<li>适合这种“只读状态、返回一个数”的小计算， graph 更干净。</li>
+</ul>
+<hr>
+<h2>第三步：修改 IA_Look 视角输入</h2>
+<p>回到 <code>BP_FPS_Player</code> 的 <code>IA_Look</code> 事件，把原来直接接 <code>Add Controller Yaw/Pitch Input</code> 的 Action Value 改成<strong>先乘灵敏度</strong>。</p>
+<h3>最终链路</h3>
+<p><a class="img-link" href="assets/img/l13-ia-look-sensitivity.png" target="_blank" rel="noopener"><img src="assets/img/l13-ia-look-sensitivity.png" alt="IA_Look 缩放后的视角输入" loading="lazy"></a></p>
+<pre><code>EnhancedInputAction IA_Look
+  ├ Triggered（执行触发）
+  └ Action Value（Vector2D）
+       ↓
+    Break Vector 2D
+       ├ X ──→ ×（乘法）──→ Add Controller Yaw Input   （左右转）
+       └ Y ──→ ×（乘法）──→ Add Controller Pitch Input （上下看）
+</code></pre>
+<p>每个 <code>×</code> 乘法节点有三个输入：</p>
+<table>
+<thead>
+<tr>
+<th align="left">输入</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>X</code> 或 <code>Y</code></td>
+<td align="left">鼠标 / 手柄在这一帧的原始二维输入</td>
+</tr>
+<tr>
+<td align="left"><code>Mouse Sensitivity</code></td>
+<td align="left">基础灵敏度变量（默认 0.7）</td>
+</tr>
+<tr>
+<td align="left"><code>Out Sensitivity</code></td>
+<td align="left">纯函数 <code>UpdateScoreSensitivity</code> 返回的状态倍率（Aim 时 0.4）</td>
+</tr>
+</tbody></table>
+<h3>输出接线</h3>
+<ul>
+<li><strong>X 分量</strong> 乘完后接 <strong><code>Add Controller Yaw Input</code></strong> 的 <code>Val</code>（左右转头）。</li>
+<li><strong>Y 分量</strong> 乘完后接 <strong><code>Add Controller Pitch Input</code></strong> 的 <code>Val</code>（上下抬头 / 低头）。</li>
+</ul>
+<blockquote>
+<p>如果你帧率很高或鼠标 DPI 很高，也可以把 <code>Mouse Sensitivity</code> 默认调小；如果感觉太肉就调大。最终有效的 Aim 灵敏度 = <code>MouseSensitivity × 0.4</code>。</p>
+</blockquote>
+<hr>
+<h2>数据流一句话总结</h2>
+<pre><code>最终视角输入 = 原始输入 × MouseSensitivity × UpdateScoreSensitivity()
+             = 原始输入 × 0.7 × (Idle/Walk/Run=1.0 或 Aim=0.4)
+</code></pre>
+<ul>
+<li>平时：<code>0.7 × 1.0 = 0.7</code></li>
+<li>瞄准时：<code>0.7 × 0.4 = 0.28</code></li>
+</ul>
+<p>这样瞄准时镜头移动会明显变慢，更容易精确对准目标。</p>
+<hr>
+<h2>易错点速查</h2>
+<ol>
+<li><code>UpdateScoreSensitivity</code> 没勾 <strong>纯函数</strong> → 节点会多一个执行引脚，没法直接塞到 <code>Add Controller ... Input</code> 的 <code>Val</code> 里。</li>
+<li><code>Mouse Sensitivity</code> 默认值为 <code>0</code> → 鼠标怎么动都没反应。</li>
+<li>只乘了 <code>Mouse Sensitivity</code> 没乘 <code>Out Sensitivity</code> → Aim 时不会变慢，失去瞄准精度优势。</li>
+<li><code>Select</code> 里 <code>Aim</code> 的倍率设反了（比如设成 2.0）→ 瞄准时镜头反而飘得更快。</li>
+<li><code>Add Controller Yaw Input</code> 和 <code>Pitch Input</code> 接反（X 接 Pitch / Y 接 Yaw）→ 鼠标上下动变成转头，左右动变成抬头。</li>
+<li>直接在 <code>IA_Look</code> 的 Action Value 上乘负数想“修正鼠标反向” → 应该在 <strong>IMC 的 IA_Look</strong> 上加 <code>Negate</code> 修改器（见第 03 课），不要在 Event Graph 里到处乘 -1。</li>
+</ol>
+<h2>下节预告</h2>
+<p>第 14 课：开火逻辑（制作开火蒙太奇动画、音效与特效）。</p>
+
+    
+    <div class="pager">
+      <a href="lesson-11.html">← 11-12 完善瞄准系统</a>
+      <a href="appendix-nodes.html">附录一 · 通用节点速查 →</a>
+    </div>
+  </main>
+</div>
+<footer class="footer">跟课进度：第 13 课 · 笔记持续更新中</footer>
+<script>
+document.getElementById('menu-btn').addEventListener('click', function () {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>

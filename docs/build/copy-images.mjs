@@ -105,6 +105,12 @@ const MAP = {
   'image-69.png': 'l12-aim-fov-eventgraph.png',
   'image-70.png': 'l12-updatedefaultfov-call.png',
   'image-71.png': 'l12-updatedefaultfov-function.png',
+
+  // 第13课 调节灵敏度
+  'image-72.png': 'l13-ia-look-sensitivity.png',
+  'image-73.png': 'l13-updatescore-function-select.png',
+  'image-74.png': 'l13-updatescore-pure.png',
+  'image-75.png': 'l13-mousesensitivity-default.png',
 };
 
 fs.mkdirSync(DEST, { recursive: true });

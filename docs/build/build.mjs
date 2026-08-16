@@ -23,6 +23,7 @@ const PAGES = [
   { id: 'lesson-07-09', md: '07-09.md', nav: '07-09 制作动画系统',   title: '第07–09课 · 制作动画系统（上/中/下）', video: 8 },
   { id: 'lesson-10',  md: '10.md',     nav: '10 模块化设计及DeBug',  title: '第10课 · 模块化设计及DeBug', video: 11 },
   { id: 'lesson-11',  md: '11.md',     nav: '11-12 完善瞄准系统', title: '第11-12课 · 完善瞄准系统（上/下）', video: 13 },
+  { id: 'lesson-13',  md: '13.md',     nav: '13 调节灵敏度',      title: '第13课 · 调节灵敏度',      video: 14 },
   { id: 'appendix-nodes', md: 'appendix-nodes.md', nav: '附录一 · 通用节点速查', title: '附录一 · 蓝图通用节点速查' },
   { id: 'appendix-troubleshooting', md: 'appendix-troubleshooting.md', nav: '附录二 · 踩坑速查', title: '附录二 · 踩坑速查（症状 → 原因 → 修复）' },
   { id: 'appendix-architecture', md: 'appendix-architecture.md', nav: '附录三 · 数据流全景', title: '附录三 · 数据流全景（工程总架构）' },
@@ -76,7 +77,7 @@ function template(page, bodyHtml) {
     ${pager}
   </main>
 </div>
-<footer class="footer">跟课进度：第 12 课 · 笔记持续更新中</footer>
+<footer class="footer">跟课进度：第 13 课 · 笔记持续更新中</footer>
 <script>
 document.getElementById('menu-btn').addEventListener('click', function () {
   document.getElementById('sidebar').classList.toggle('open');

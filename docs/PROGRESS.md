@@ -1,7 +1,7 @@
 # 站点构建进度（供中断后接手）
 
 > 本文件记录 UE5 FPS 学习笔记静态站的构建进度与关键决策。随时更新。
-> 最新更新：2026-08-09 四次更新（合并第 12 课「完善瞄准系统（下）」到 11-12 页）。
+> 最新更新：2026-08-09 五次更新（新增第 13 课「调节灵敏度」）。
 
 ## 目标
 
@@ -70,6 +70,12 @@
 - 新增第 12 课截图 8 张并更新 `copy-images.mjs` 映射；copy 校验 84/84
 - 11-12 页内容：Step 8 加 `Sight` 机瞄组件；Step 9 修复动态模糊拉长准星（`After Motion Blur`）；Step 10 FOV 平滑缩放（105→75，FInterp To + Set Timer By Event + OutFOV）；Step 11 `UpdateDefaultFOV` 存默认 FOV 变量
 - 站点页脚、PAGES、index 首页卡片、AGENTS.md 的 `EPlayerState` 命名同步更新
+
+## 2026-08-09 五次更新
+
+- 新增第 13 课「调节灵敏度」：`content/13.md` + `lesson-13.html`，视频 P14
+- 内容：`MouseSensitivity` 变量（默认 0.7）+ 纯函数 `UpdateScoreSensitivity`（按 `E_PlayerState` 输出倍率，Aim=0.4）+ `IA_Look` 输入先乘灵敏度再进 `Add Controller Yaw/Pitch Input`
+- 新增 4 张截图并更新 `copy-images.mjs` 映射；copy 校验 88/88
 
 ## 待办（全部完成 ✅）
 
