@@ -1,15 +1,17 @@
 {
   "mcpServers": {
     "nova-tools": {
+      "command": "C:\\nvm4w\\nodejs\\node.exe",
       "args": [
         "C:\\Users\\Administrator\\.nova\\runtime\\nova-tools-mcp.mjs"
       ],
-      "command": "C:\\nvm4w\\nodejs\\node.exe",
       "env": {
-        "NOVA_CONTEXT_SERVICE_ENDPOINT": "\\\\.\\pipe\\nova-context-8776",
-        "NOVA_CONTEXT_SERVICE_TOKEN": "45f12fcd-9d7a-4ea6-870e-d31b58bb9da6",
         "NOVA_FAST_CONTEXT": "1",
-        "NOVA_TOOLS_CWD": "D:\\Unreal Projects\\FPS_Game_Demo"
+        "NOVA_CONTEXT_RETRIEVAL_MODE": "fast",
+        "NOVA_CONTEXT_NO_INDEX": "0",
+        "NOVA_TOOLS_CWD": "D:\\Unreal Projects\\FPS_Game_Demo",
+        "NOVA_CONTEXT_SERVICE_ENDPOINT": "\\\\.\\pipe\\nova-context-16080",
+        "NOVA_CONTEXT_SERVICE_TOKEN": "b33e0421-bb7a-4c31-98b7-65ae3321df41"
       },
       "transport": "stdio"
     }
